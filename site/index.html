@@ -224,6 +224,8 @@
         <a href="#mulai">Mulai</a>
         <a href="#tts">TTS</a>
         <a href="#scene">Scene</a>
+        <a href="#contoh">Contoh</a>
+        <a href="#ai">AI</a>
         <a href="#lisensi">Lisensi</a>
         <a class="gh" href="https://github.com/Orlinkzz/remotion-shorts-id">GitHub</a>
       </nav>
@@ -452,6 +454,46 @@ whisper-config.mjs  model dan bahasa Whisper</pre></div>
       </div>
     </section>
 
+    <section id="contoh">
+      <div class="wrap">
+        <h2>Contoh siap pakai</h2>
+        <p class="sub">Dua video lengkap dengan naskah, suara TTS, dan captions. Buka di Studio dengan mengubah <code class="inline">videoId</code> di panel Props, atau langsung render.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>3 tips anti N+1 query di Laravel</h3>
+            <p>PHP · 5 scene · ±39 detik. Hook, contoh kode salah, solusi eager loading, 3 tips, outro.</p>
+            <p style="margin-top:12px"><a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/public/videos/n-plus-one/video.json">video.json</a> · <code class="inline">npm run render n-plus-one</code></p>
+          </div>
+          <div class="card">
+            <h3>Jangan pakai || untuk nilai default</h3>
+            <p>JavaScript · 5 scene · ±44 detik. Bug angka 0 yang hilang, solusi <code class="inline">??</code>, kapan pakai <code class="inline">??</code>, <code class="inline">||</code>, dan <code class="inline">?.</code>.</p>
+            <p style="margin-top:12px"><a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/public/videos/nullish-coalescing/video.json">video.json</a> · <code class="inline">npm run render nullish-coalescing</code></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="ai">
+      <div class="wrap">
+        <h2>Buat naskah dengan AI</h2>
+        <p class="sub">Folder <code class="inline">remotion-shorts-skill/</code> berisi aturan dan prompt supaya AI hanya memakai tipe scene dan field yang benar-benar ada, tanpa mengarang fitur baru.</p>
+        <div class="grid">
+          <div class="card">
+            <h3>SKILL.md</h3>
+            <p>Untuk agent di dalam repo (Claude Code, Copilot, Cursor): skema scene, batas panjang, ejaan bantu TTS, daftar 81 template, dan hal yang tidak boleh dilakukan agent. <a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/remotion-shorts-skill/SKILL.md">Buka</a></p>
+          </div>
+          <div class="card">
+            <h3>prompt.md</h3>
+            <p>Prompt pendek untuk agent, dan prompt lengkap untuk chatbot di luar repo (ChatGPT, Claude.ai, Gemini) yang menghasilkan <code class="inline">video.json</code> siap validasi. <a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/remotion-shorts-skill/prompt.md">Buka</a></p>
+          </div>
+        </div>
+        <div class="code" style="margin-top:20px"><div class="label">Prompt untuk agent di dalam repo</div><button class="copy" type="button">Salin</button><pre>Pakai skill di remotion-shorts-skill/SKILL.md dan patuhi batasnya.
+Buat video Shorts tentang: bedanya git merge dan git rebase
+Penonton: pemula. Bahasa kode: bash. Durasi: 40 detik.
+Setelah video.json jadi: jalankan npm run validate, lalu npm run tts, lalu validate lagi.</pre></div>
+      </div>
+    </section>
+
     <section id="faq">
       <div class="wrap">
         <h2>Pertanyaan umum</h2>
@@ -473,7 +515,7 @@ whisper-config.mjs  model dan bahasa Whisper</pre></div>
         </details>
         <details>
           <summary>Bisa dipakai bersama AI agent?</summary>
-          <p>Bisa. <code class="inline">AGENTS.md</code> berisi petunjuk untuk agent di VS Code (Claude Code, Copilot, dan lainnya). Agent cukup menulis <code class="inline">video.json</code> dan menjalankan perintah npm.</p>
+          <p>Bisa. <code class="inline">AGENTS.md</code> berisi petunjuk untuk agent di VS Code (Claude Code, Copilot, dan lainnya). Agent cukup menulis <code class="inline">video.json</code> dan menjalankan perintah npm. Untuk hasil yang konsisten, minta agent memakai <code class="inline">remotion-shorts-skill/SKILL.md</code>; untuk chatbot di luar repo, pakai prompt di <code class="inline">prompt.md</code>.</p>
         </details>
       </div>
     </section>
