@@ -72,7 +72,7 @@ const azure = {
           "Ocp-Apim-Subscription-Key": process.env.AZURE_SPEECH_KEY,
           "Content-Type": "application/ssml+xml",
           "X-Microsoft-OutputFormat": "audio-24khz-48kbitrate-mono-mp3",
-          "User-Agent": "senimankode-shorts",
+          "User-Agent": "remotion-shorts-id",
         },
         body: ssml,
       },

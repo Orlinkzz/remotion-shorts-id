@@ -1,4 +1,6 @@
-# senimankode-shorts
+# remotion-shorts-id
+
+📖 Dokumentasi: **https://orlinkzz.github.io/remotion-shorts-id/** (sumbernya di `site/`, dideploy otomatis oleh `.github/workflows/pages.yml` setiap ada perubahan di `site/` pada branch `main`).
 
 Generator video pendek edukasi (Reels / TikTok / YouTube Shorts, 1080×1920) di atas Remotion.
 Gabungan dua template:

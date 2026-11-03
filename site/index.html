@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>remotion-shorts-id: Generator Video Shorts Edukasi Coding dengan Remotion</title>
+  <meta name="description" content="Buat video pendek vertikal (TikTok, Reels, YouTube Shorts) untuk edukasi coding dari satu file JSON. Caption per kata, syntax highlight, TTS gratis bahasa Indonesia, dan 81 template Remotion.">
+  <meta name="keywords" content="remotion, video shorts, tiktok, reels, youtube shorts, edukasi coding, text to speech indonesia, tts, whisper, caption otomatis, react video">
+  <meta name="author" content="Senimankode">
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0B1020">
+  <link rel="canonical" href="https://orlinkzz.github.io/remotion-shorts-id/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:site_name" content="remotion-shorts-id">
+  <meta property="og:title" content="remotion-shorts-id: Video Shorts edukasi coding dari file JSON">
+  <meta property="og:description" content="Naskah JSON + TTS gratis bahasa Indonesia, lalu render jadi video 1080×1920 dengan caption per kata dan syntax highlight. Dibangun di atas Remotion.">
+  <meta property="og:url" content="https://orlinkzz.github.io/remotion-shorts-id/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="remotion-shorts-id">
+  <meta name="twitter:description" content="Generator video Shorts edukasi coding: naskah JSON, TTS gratis, caption per kata, render 1080×1920.">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareSourceCode",
+    "name": "remotion-shorts-id",
+    "description": "Generator video pendek vertikal edukasi coding (TikTok, Reels, YouTube Shorts) berbasis Remotion: naskah JSON, TTS bahasa Indonesia, caption per kata, syntax highlight.",
+    "codeRepository": "https://github.com/Orlinkzz/remotion-shorts-id",
+    "url": "https://orlinkzz.github.io/remotion-shorts-id/",
+    "programmingLanguage": ["TypeScript", "React"],
+    "runtimePlatform": "Node.js",
+    "license": "https://opensource.org/licenses/MIT",
+    "inLanguage": "id",
+    "author": { "@type": "Organization", "name": "Senimankode" }
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Apakah harus merekam suara sendiri?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Tidak. Jalankan npm run tts <id> untuk membuat voice.mp3 dari naskah dengan TTS gratis. Rekaman sendiri tetap bisa dipakai lewat npm run transcribe <id>." }
+      },
+      {
+        "@type": "Question",
+        "name": "Apakah gratis untuk konten komersial?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Kode proyek ini MIT. Remotion gratis untuk individu, perusahaan dengan maksimal 3 karyawan, dan nirlaba; perusahaan yang lebih besar butuh Company License. Untuk audio komersial, pakai provider TTS resmi (Azure atau Google) atau rekaman sendiri." }
+      },
+      {
+        "@type": "Question",
+        "name": "Kenapa ejaan istilah teknis di caption selalu benar?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Teks caption diambil dari naskah, bukan dari hasil Whisper. Whisper hanya dipakai untuk timestamp tiap kata." }
+      },
+      {
+        "@type": "Question",
+        "name": "Bagaimana kalau layanan TTS kena limit?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Provider dicoba berurutan (edge, azure, google, gtranslate). Kalau satu gagal, seluruh video dibuat ulang dengan provider berikutnya supaya suaranya tetap satu orang." }
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #080b1a;
+      --surface: #111827;
+      --surface-2: #1f2937;
+      --border: #263043;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #a78bfa;
+      --highlight: #39e508;
+      --code-bg: #0d1117;
+      --radius: 18px;
+      --max: 1080px;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--text);
+      background-color: var(--bg);
+      background-image:
+        radial-gradient(90% 50% at 50% -10%, rgba(79, 70, 229, 0.45), transparent 70%),
+        radial-gradient(60% 40% at 100% 100%, rgba(124, 58, 237, 0.18), transparent 70%),
+        linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+      background-size: auto, auto, 54px 54px, 54px 54px;
+      background-attachment: fixed;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    img, svg { max-width: 100%; }
+
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
+
+    /* Navigasi */
+    header.nav {
+      position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(10px);
+      background: rgba(8, 11, 26, 0.75);
+      border-bottom: 1px solid var(--border);
+    }
+    header.nav .wrap { display: flex; align-items: center; gap: 20px; height: 60px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; color: var(--text); }
+    .brand img { width: 26px; height: 26px; }
+    .nav-links { display: flex; gap: 18px; margin-left: auto; font-size: 15px; }
+    .nav-links a { color: var(--muted); }
+    .nav-links a:hover { color: var(--text); text-decoration: none; }
+    @media (max-width: 760px) { .nav-links a:not(.gh) { display: none; } }
+
+    /* Hero */
+    .hero { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 48px; align-items: center; padding: 72px 0 56px; }
+    @media (max-width: 860px) { .hero { grid-template-columns: 1fr; padding-top: 48px; } }
+    .eyebrow { display: inline-block; padding: 4px 12px; border: 1px solid var(--border); border-radius: 999px; color: var(--muted); font-size: 14px; background: rgba(17, 24, 39, 0.6); }
+    h1 { font-size: clamp(34px, 6vw, 56px); line-height: 1.08; font-weight: 900; margin: 18px 0; letter-spacing: -0.02em; }
+    .grad { background: linear-gradient(90deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .lead { font-size: 19px; color: var(--muted); max-width: 560px; }
+    .cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 12px; font-weight: 800; border: 1px solid var(--border); color: var(--text); background: var(--surface); }
+    .btn:hover { text-decoration: none; border-color: var(--accent); }
+    .btn.primary { background: linear-gradient(90deg, var(--accent), var(--accent-2)); color: #0b1020; border: 0; }
+
+    /* Pratinjau ponsel */
+    .phone {
+      justify-self: center; width: min(300px, 80vw); aspect-ratio: 9 / 16;
+      border-radius: 34px; padding: 14px; position: relative;
+      background: #0b1020; border: 2px solid var(--border);
+      box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55), 0 0 60px rgba(79, 70, 229, 0.25);
+      overflow: hidden;
+    }
+    .phone .screen {
+      height: 100%; border-radius: 24px; padding: 34px 16px 0; position: relative;
+      background:
+        radial-gradient(95% 60% at 50% -8%, rgba(79, 70, 229, 0.8), transparent 70%),
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        #080b1a;
+      background-size: auto, 18px 18px, 18px 18px, auto;
+    }
+    .mini-code { border-radius: 12px; background: var(--code-bg); border: 1px solid var(--surface-2); font-family: var(--mono); font-size: 10.5px; line-height: 1.7; overflow: hidden; }
+    .mini-code .bar { display: flex; gap: 5px; padding: 8px 10px; background: var(--surface); }
+    .mini-code .bar i { width: 7px; height: 7px; border-radius: 50%; display: block; }
+    .mini-code pre { margin: 0; padding: 10px 12px; white-space: pre; color: #d4d4d4; }
+    .mini-code .lit { background: rgba(56, 189, 248, 0.15); border-left: 3px solid var(--accent); display: block; margin: 0 -12px; padding: 0 12px 0 9px; }
+    .k { color: #569cd6; } .v { color: #9cdcfe; } .s { color: #ce9178; } .f { color: #dcdcaa; }
+    .cap { position: absolute; left: 0; right: 0; bottom: 22%; text-align: center; font-weight: 900; font-size: 22px; padding: 0 12px; color: #fff; -webkit-text-stroke: 4px #000; paint-order: stroke; }
+    .cap b { color: var(--highlight); }
+
+    /* Section */
+    section { padding: 56px 0; }
+    h2 { font-size: clamp(26px, 4vw, 36px); font-weight: 900; margin: 0 0 8px; letter-spacing: -0.01em; }
+    h3 { font-size: 19px; margin: 0 0 6px; }
+    .sub { color: var(--muted); margin: 0 0 28px; max-width: 680px; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+    .card { background: rgba(17, 24, 39, 0.78); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; }
+    .card p { margin: 0; color: var(--muted); font-size: 15.5px; }
+    .icon { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; margin-bottom: 14px; background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(167, 139, 250, 0.2)); color: var(--accent); }
+
+    ol.steps { list-style: none; counter-reset: step; padding: 0; margin: 0; display: grid; gap: 16px; }
+    ol.steps > li { counter-increment: step; display: grid; grid-template-columns: 44px 1fr; gap: 16px; }
+    ol.steps > li::before { content: counter(step); width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; font-weight: 900; color: #0b1020; background: linear-gradient(135deg, var(--accent), var(--accent-2)); }
+    ol.steps p { margin: 4px 0 10px; color: var(--muted); }
+
+    /* Kode */
+    .code { position: relative; background: var(--code-bg); border: 1px solid var(--surface-2); border-radius: 14px; overflow: hidden; }
+    .code pre { margin: 0; padding: 16px 18px; overflow-x: auto; font-family: var(--mono); font-size: 14px; line-height: 1.6; color: #d4d4d4; }
+    .code .label { padding: 8px 14px; font-size: 13px; color: var(--muted); background: var(--surface); border-bottom: 1px solid var(--surface-2); font-family: var(--mono); }
+    .copy { position: absolute; top: 6px; right: 8px; font: 600 12px var(--sans); color: var(--muted); background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+    .copy:hover { color: var(--text); }
+    .c { color: #6a9955; }
+    code.inline { font-family: var(--mono); font-size: 0.88em; background: var(--surface-2); padding: 2px 6px; border-radius: 6px; color: var(--text); }
+
+    /* Tabel */
+    .table { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); background: rgba(17, 24, 39, 0.78); }
+    table { width: 100%; border-collapse: collapse; font-size: 15.5px; }
+    th, td { text-align: left; padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; font-size: 14px; background: rgba(31, 41, 55, 0.6); }
+    tr:last-child td { border-bottom: 0; }
+    td code { font-family: var(--mono); font-size: 0.88em; color: var(--accent); white-space: nowrap; }
+
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media (max-width: 860px) { .two { grid-template-columns: 1fr; } }
+
+    .tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: middle; }
+    .tag.free { background: rgba(57, 229, 8, 0.14); color: var(--highlight); }
+    .tag.key { background: rgba(56, 189, 248, 0.14); color: var(--accent); }
+
+    details { background: rgba(17, 24, 39, 0.78); border: 1px solid var(--border); border-radius: 14px; padding: 14px 18px; }
+    details + details { margin-top: 10px; }
+    summary { cursor: pointer; font-weight: 700; }
+    details p { color: var(--muted); margin: 10px 0 0; }
+
+    .note { border-left: 4px solid var(--accent-2); background: rgba(167, 139, 250, 0.08); padding: 14px 18px; border-radius: 0 12px 12px 0; color: var(--muted); }
+
+    footer { border-top: 1px solid var(--border); padding: 28px 0 40px; color: var(--muted); font-size: 14px; }
+    footer .wrap { display: flex; flex-wrap: wrap; gap: 12px 24px; justify-content: space-between; }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap">
+      <a class="brand" href="#top"><img src="favicon.svg" alt="" width="26" height="26">remotion-shorts-id</a>
+      <nav class="nav-links" aria-label="Navigasi">
+        <a href="#fitur">Fitur</a>
+        <a href="#mulai">Mulai</a>
+        <a href="#tts">TTS</a>
+        <a href="#scene">Scene</a>
+        <a href="#lisensi">Lisensi</a>
+        <a class="gh" href="https://github.com/Orlinkzz/remotion-shorts-id">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <div class="wrap">
+      <div class="hero">
+        <div>
+          <span class="eyebrow">Remotion · React · TypeScript</span>
+          <h1>Video <span class="grad">Shorts edukasi coding</span> dari satu file JSON</h1>
+          <p class="lead">Tulis naskah dan scene, buat suara dengan TTS gratis bahasa Indonesia, lalu render jadi video vertikal 1080×1920 untuk TikTok, Reels, dan YouTube Shorts, lengkap dengan caption per kata dan syntax highlight.</p>
+          <div class="cta">
+            <a class="btn primary" href="#mulai">Mulai sekarang</a>
+            <a class="btn" href="https://github.com/Orlinkzz/remotion-shorts-id">Lihat di GitHub</a>
+          </div>
+        </div>
+        <div class="phone" role="img" aria-label="Contoh tampilan video: jendela kode PHP dengan baris yang disorot dan caption per kata">
+          <div class="screen">
+            <div class="mini-code">
+              <div class="bar"><i style="background:#ff5f57"></i><i style="background:#febc2e"></i><i style="background:#28c840"></i></div>
+<pre><span class="lit"><span class="v">$posts</span> = <span class="f">Post</span>::<span class="f">with</span>(<span class="s">'author'</span>)</span>  -&gt;<span class="f">get</span>();
+
+<span class="k">foreach</span> (<span class="v">$posts</span> <span class="k">as</span> <span class="v">$post</span>) {
+  <span class="k">echo</span> <span class="v">$post</span>-&gt;author-&gt;name;
+}</pre>
+            </div>
+            <div class="cap">Pakai <b>eager</b> loading</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <section id="fitur">
+      <div class="wrap">
+        <h2>Fitur</h2>
+        <p class="sub">Semua input berupa berkas dan semua aksi berupa perintah npm, jadi bisa dikerjakan manual atau oleh AI agent di VS Code.</p>
+        <div class="grid">
+          <div class="card">
+            <div class="icon" aria-hidden="true">Aa</div>
+            <h3>Caption dari naskah</h3>
+            <p>Teks caption diambil dari naskah, jadi ejaan Laravel, PostgreSQL, atau Next.js selalu benar. Whisper hanya dipakai untuk timestamp tiap kata.</p>
+          </div>
+          <div class="card">
+            <div class="icon" aria-hidden="true">🔊</div>
+            <h3>TTS gratis + cadangan</h3>
+            <p>Suara neural bahasa Indonesia tanpa API key. Kalau satu layanan kena limit, otomatis pindah ke layanan berikutnya.</p>
+          </div>
+          <div class="card">
+            <div class="icon" aria-hidden="true">{ }</div>
+            <h3>Syntax highlight</h3>
+            <p>Scene kode dengan baris muncul berurutan dan sorotan bergantian. PHP, TypeScript, Go, Python, SQL, Bash, Dart, Docker, dan lainnya.</p>
+          </div>
+          <div class="card">
+            <div class="icon" aria-hidden="true">81</div>
+            <h3>81 template</h3>
+            <p>Seluruh template RVE siap dipakai sebagai scene, dari chart, lower third, sampai logo reveal.</p>
+          </div>
+          <div class="card">
+            <div class="icon" aria-hidden="true">⏱</div>
+            <h3>Sinkronisasi otomatis</h3>
+            <p>Batas scene ditentukan dari kata pertama yang diucapkan, dan durasi video mengikuti panjang audio.</p>
+          </div>
+          <div class="card">
+            <div class="icon" aria-hidden="true">✓</div>
+            <h3>Validasi naskah</h3>
+            <p>JSON Schema untuk autocomplete di VS Code, dan <code class="inline">npm run validate</code> untuk mengecek naskah sebelum render.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="mulai">
+      <div class="wrap">
+        <h2>Mulai dalam 4 langkah</h2>
+        <p class="sub">Butuh Node.js 20.19+, 22.13+, atau 24+. Transkripsi pertama kali mengunduh Whisper.cpp dan model <code class="inline">small</code> (±466 MB).</p>
+        <ol class="steps">
+          <li>
+            <div>
+              <h3>Pasang proyek</h3>
+              <div class="code"><button class="copy" type="button">Salin</button><pre>git clone https://github.com/Orlinkzz/remotion-shorts-id.git
+cd remotion-shorts-id
+npm install</pre></div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Tulis naskah</h3>
+              <p>Buat <code class="inline">public/videos/&lt;id&gt;/video.json</code>. Setiap scene wajib punya <code class="inline">narration</code>, yaitu kalimat yang diucapkan di scene itu.</p>
+              <div class="code"><div class="label">public/videos/n-plus-one/video.json</div><button class="copy" type="button">Salin</button><pre>{
+  "$schema": "../../../video.schema.json",
+  "title": "3 tips anti N+1 query di Laravel",
+  "voice": "voice.mp3",
+  "scenes": [
+    {
+      "type": "hook",
+      "narration": "Hati-hati, N+1 query bisa bikin API Laravel kamu lambat banget.",
+      "speech": "Hati-hati, N plus one query bisa bikin API Laravel kamu lambat banget.",
+      "text": "*N+1 query* bikin API-mu lambat"
+    },
+    {
+      "type": "code",
+      "narration": "Solusinya pakai eager loading dengan method with.",
+      "language": "php",
+      "filename": "PostController.php",
+      "code": "$posts = Post::with('author')->get();",
+      "highlightLines": [[1, 1]]
+    },
+    {
+      "type": "outro",
+      "narration": "Follow untuk tips Laravel berikutnya.",
+      "cta": "Follow untuk tips backend lainnya"
+    }
+  ]
+}</pre></div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Buat suara</h3>
+              <p>Pilih TTS (tanpa rekaman) atau rekaman sendiri. Keduanya menghasilkan <code class="inline">captions.json</code> untuk sinkronisasi.</p>
+              <div class="code"><button class="copy" type="button">Salin</button><pre>npm run validate n-plus-one
+npm run tts n-plus-one          <span class="c"># TTS: voice.mp3 + captions.json</span>
+<span class="c"># atau rekaman sendiri di public/videos/n-plus-one/voice.mp3:</span>
+npm run transcribe n-plus-one</pre></div>
+            </div>
+          </li>
+          <li>
+            <div>
+              <h3>Cek lalu render</h3>
+              <p>Buka Remotion Studio untuk pratinjau, lalu render ke MP4.</p>
+              <div class="code"><button class="copy" type="button">Salin</button><pre>npm run dev                     <span class="c"># Studio, composition "Short"</span>
+npm run render n-plus-one       <span class="c"># hasil: out/n-plus-one.mp4</span></pre></div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="tts">
+      <div class="wrap">
+        <h2>TTS tanpa rekaman</h2>
+        <p class="sub"><code class="inline">npm run tts &lt;id&gt;</code> mencoba provider berurutan. Kalau satu gagal karena limit, jaringan, atau key kosong, seluruh video dibuat ulang dengan provider berikutnya supaya suaranya tetap satu orang.</p>
+        <div class="table">
+          <table>
+            <thead><tr><th>Urutan</th><th>Provider</th><th>Keterangan</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><code>edge</code><span class="tag free">gratis</span></td><td>Suara neural Microsoft (mis. <code>id-ID-ArdiNeural</code>) lewat layanan Read Aloud Edge. Tanpa key, tidak resmi.</td></tr>
+              <tr><td>2</td><td><code>azure</code><span class="tag key">key</span></td><td>Azure Speech resmi, kuota gratis bulanan. Isi <code>AZURE_SPEECH_KEY</code> dan <code>AZURE_SPEECH_REGION</code> di <code>.env</code>.</td></tr>
+              <tr><td>3</td><td><code>google</code><span class="tag key">key</span></td><td>Google Cloud Text-to-Speech resmi, kuota gratis bulanan. Isi <code>GOOGLE_TTS_API_KEY</code> di <code>.env</code>.</td></tr>
+              <tr><td>4</td><td><code>gtranslate</code><span class="tag free">gratis</span></td><td>Cadangan terakhir tanpa key, suara robotik.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="two" style="margin-top:20px">
+          <div class="code"><div class="label">Opsi</div><button class="copy" type="button">Salin</button><pre>npm run tts &lt;id&gt; -- --provider=google   <span class="c"># paksa satu provider</span>
+npm run tts &lt;id&gt; -- --no-transcribe     <span class="c"># hanya audio</span>
+npm run tts &lt;id&gt; -- --force             <span class="c"># timpa rekaman</span></pre></div>
+          <div class="card">
+            <h3>Pelafalan dan cache</h3>
+            <p>Isi <code class="inline">speech</code> di scene kalau yang diucapkan harus beda dari caption, mis. "N+1" dibaca "N plus one". Audio per scene di-cache, jadi yang dibuat ulang hanya scene yang teksnya berubah. Suara, kecepatan, dan jeda diatur di <code class="inline">tts-config.mjs</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="scene">
+      <div class="wrap">
+        <h2>Tipe scene</h2>
+        <p class="sub">Semua scene wajib punya <code class="inline">narration</code> dan boleh punya <code class="inline">speech</code>. Tulis <code class="inline">*kata*</code> untuk memberi warna aksen.</p>
+        <div class="table">
+          <table>
+            <thead><tr><th>type</th><th>Field</th><th>Tampilan</th></tr></thead>
+            <tbody>
+              <tr><td><code>hook</code></td><td><code>text</code>, <code>subtext?</code></td><td>Judul besar pembuka dengan animasi pantul.</td></tr>
+              <tr><td><code>code</code></td><td><code>language</code>, <code>filename?</code>, <code>code</code>, <code>highlightLines?</code></td><td>Jendela editor, baris muncul berurutan lalu disorot bergantian. Usahakan baris ≤ 38 karakter.</td></tr>
+              <tr><td><code>points</code></td><td><code>title?</code>, <code>items</code> (1–6)</td><td>Daftar bernomor yang muncul satu per satu.</td></tr>
+              <tr><td><code>outro</code></td><td><code>cta</code>, <code>handle?</code></td><td>Kartu ajakan follow dengan nama brand.</td></tr>
+              <tr><td><code>template</code></td><td><code>template</code></td><td>Salah satu dari 81 template RVE, tampil apa adanya.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="perintah">
+      <div class="wrap">
+        <h2>Perintah</h2>
+        <div class="table">
+          <table>
+            <thead><tr><th>Perintah</th><th>Fungsi</th></tr></thead>
+            <tbody>
+              <tr><td><code>npm run dev</code></td><td>Remotion Studio: composition <code>Short</code> dan galeri folder <code>Templates</code>.</td></tr>
+              <tr><td><code>npm run validate [id]</code></td><td>Periksa <code>video.json</code>: skema, panjang baris kode, file suara, captions.</td></tr>
+              <tr><td><code>npm run tts &lt;id&gt;</code></td><td>Buat <code>voice.mp3</code> dari naskah, lalu <code>captions.json</code>.</td></tr>
+              <tr><td><code>npm run transcribe &lt;id&gt;</code></td><td>Buat <code>captions.json</code> dari rekaman (Whisper.cpp).</td></tr>
+              <tr><td><code>npm run render &lt;id&gt;</code></td><td>Render ke <code>out/&lt;id&gt;.mp4</code> (1080×1920, H.264).</td></tr>
+              <tr><td><code>npm run schema</code></td><td>Buat ulang <code>video.schema.json</code> setelah skema berubah.</td></tr>
+              <tr><td><code>npm run lint</code></td><td>ESLint + TypeScript.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="cara-kerja">
+      <div class="wrap">
+        <div class="two">
+          <div>
+            <h2>Cara sinkronisasi bekerja</h2>
+            <p class="sub">Kata di naskah dicocokkan dengan kata hasil Whisper memakai alignment urutan dan pencocokan fuzzy. Kata yang tidak terdeteksi diinterpolasi dari tetangganya. Scene mulai 120 ms sebelum kata pertamanya diucapkan, dan durasi video sama dengan panjang audio ditambah jeda akhir.</p>
+            <p class="note">Background memakai komponen NotebookPaper (grid, cahaya, grain) yang bisa diatur dari panel Props di Studio, termasuk preset warna indigo, emerald, rose, dan amber.</p>
+          </div>
+          <div class="code"><div class="label">Struktur</div><pre>src/
+  compositions/   Short.tsx, background NotebookPaper
+  scenes/         Hook, Code, Points, Outro
+  components/     Captions, Emphasis
+  lib/align.ts    sinkronisasi naskah &lt;-&gt; Whisper
+  templates/      81 template RVE
+scripts/          tts, transcribe, render, validate
+public/videos/&lt;id&gt;/  video.json, voice.mp3, captions.json
+tts-config.mjs    urutan provider, suara, kecepatan
+whisper-config.mjs  model dan bahasa Whisper</pre></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="wrap">
+        <h2>Pertanyaan umum</h2>
+        <details>
+          <summary>Apakah harus merekam suara sendiri?</summary>
+          <p>Tidak. Jalankan <code class="inline">npm run tts &lt;id&gt;</code> untuk membuat suara dari naskah. Rekaman sendiri tetap bisa dipakai lewat <code class="inline">npm run transcribe &lt;id&gt;</code>, dan <code class="inline">npm run tts</code> tidak akan menimpa rekaman tanpa <code class="inline">-- --force</code>.</p>
+        </details>
+        <details>
+          <summary>Apakah gratis untuk konten komersial?</summary>
+          <p>Kode proyek ini MIT. Remotion gratis untuk individu, perusahaan dengan maksimal 3 karyawan, dan nirlaba; perusahaan yang lebih besar butuh Company License. Untuk audio komersial, pakai provider resmi (Azure atau Google) atau rekaman sendiri.</p>
+        </details>
+        <details>
+          <summary>Kenapa ejaan istilah teknis di caption selalu benar?</summary>
+          <p>Caption diambil dari naskah. Whisper hanya memberi timestamp, jadi salah dengar istilah Inggris tidak pernah muncul di layar.</p>
+        </details>
+        <details>
+          <summary>Bagaimana kalau layanan TTS kena limit?</summary>
+          <p>Provider dicoba berurutan: edge, azure, google, gtranslate. Azure dan Google otomatis dilewati kalau key belum diisi.</p>
+        </details>
+        <details>
+          <summary>Bisa dipakai bersama AI agent?</summary>
+          <p>Bisa. <code class="inline">AGENTS.md</code> berisi petunjuk untuk agent di VS Code (Claude Code, Copilot, dan lainnya). Agent cukup menulis <code class="inline">video.json</code> dan menjalankan perintah npm.</p>
+        </details>
+      </div>
+    </section>
+
+    <section id="lisensi">
+      <div class="wrap">
+        <h2>Lisensi</h2>
+        <p class="sub">Kode asli proyek ini berlisensi <a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/LICENSE">MIT</a>. Komponen pihak ketiga tetap memakai lisensinya sendiri, rinciannya di <a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/NOTICE.md">NOTICE.md</a>.</p>
+        <div class="grid">
+          <div class="card"><h3>Remotion</h3><p>Remotion License: gratis (termasuk komersial) untuk individu, perusahaan ≤ 3 karyawan, dan nirlaba. Perusahaan lebih besar wajib membeli Company License. <a href="https://www.remotion.dev/license">Baca ketentuannya</a>.</p></div>
+          <div class="card"><h3>Template RVE</h3><p>Gratis dipakai di proyek apa pun, atribusi dihargai. Header asli tiap file dipertahankan.</p></div>
+          <div class="card"><h3>Audio TTS</h3><p>Mengikuti ketentuan provider yang dipakai. Untuk konten komersial, pakai Azure atau Google, atau rekaman sendiri.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <span>© 2026 Senimankode · remotion-shorts-id</span>
+      <span><a href="https://github.com/Orlinkzz/remotion-shorts-id">GitHub</a> · <a href="https://www.remotion.dev">Remotion</a> · <a href="https://www.reactvideoeditor.com">RVE Templates</a></span>
+    </div>
+  </footer>
+
+  <script>
+    // Tombol "Salin" di setiap blok kode (teks komentar # ikut tersalin apa adanya).
+    document.querySelectorAll(".code .copy").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const text = button.parentElement.querySelector("pre").innerText;
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "Tersalin";
+        } catch {
+          button.textContent = "Gagal";
+        }
+        setTimeout(() => (button.textContent = "Salin"), 1500);
+      });
+    });
+  </script>
+</body>
+</html>
