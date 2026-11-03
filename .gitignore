@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+.DS_Store
+.env
+temp
+
+# Hasil render, whisper.cpp, dan cache audio TTS tidak ikut git
+out
+whisper.cpp
+.cache

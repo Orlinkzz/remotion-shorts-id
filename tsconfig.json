@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Preserve",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "types": [
+      "web"
+    ],
+    "strict": true,
+    "noEmit": true,
+    "lib": [
+      "es2022",
+      "dom"
+    ],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noUnusedLocals": false,
+    "allowImportingTsExtensions": true
+  },
+  "exclude": [
+    "remotion.config.ts",
+    "scripts",
+    "node_modules",
+    "out",
+    "whisper.cpp"
+  ]
+}

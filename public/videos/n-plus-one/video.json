@@ -1,0 +1,58 @@
+{
+  "$schema": "../../../video.schema.json",
+  "title": "3 tips anti N+1 query di Laravel",
+  "voice": "voice.mp3",
+  "scenes": [
+    {
+      "type": "hook",
+      "narration": "Hati-hati, N+1 query bisa bikin API Laravel kamu lambat banget.",
+      "text": "*N+1 query* bikin API-mu lambat",
+      "subtext": "Kesalahan Laravel paling umum"
+    },
+    {
+      "type": "code",
+      "narration": "Lihat kode ini. Kita ambil semua post, lalu di dalam foreach kita panggil relasi author. Setiap iterasi menjalankan satu query baru ke database.",
+      "language": "php",
+      "filename": "PostController.php",
+      "code": "$posts = Post::all();\n\nforeach ($posts as $post) {\n    echo $post->author->name;\n}",
+      "highlightLines": [
+        [
+          1,
+          1
+        ],
+        [
+          3,
+          4
+        ]
+      ]
+    },
+    {
+      "type": "code",
+      "narration": "Solusinya gampang. Pakai eager loading dengan method with. Sekarang cukup dua query saja, berapa pun jumlah post-nya.",
+      "language": "php",
+      "filename": "PostController.php",
+      "code": "$posts = Post::with('author')->get();\n\nforeach ($posts as $post) {\n    echo $post->author->name;\n}",
+      "highlightLines": [
+        [
+          1,
+          1
+        ]
+      ]
+    },
+    {
+      "type": "points",
+      "narration": "Tiga tips. Aktifkan preventLazyLoading di development, cek jumlah query pakai Debugbar, dan selalu pakai with untuk relasi yang dipakai di dalam loop.",
+      "title": "3 tips *anti N+1*",
+      "items": [
+        "preventLazyLoading() di development",
+        "Cek jumlah query pakai Debugbar",
+        "Pakai with() untuk relasi di loop"
+      ]
+    },
+    {
+      "type": "outro",
+      "narration": "Follow untuk tips Laravel dan backend berikutnya.",
+      "cta": "Follow untuk tips backend lainnya"
+    }
+  ]
+}
