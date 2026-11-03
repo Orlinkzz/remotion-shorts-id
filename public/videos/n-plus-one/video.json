@@ -6,12 +6,14 @@
     {
       "type": "hook",
       "narration": "Hati-hati, N+1 query bisa bikin API Laravel kamu lambat banget.",
+      "speech": "Hati-hati, N plus one query bisa bikin API Laravel kamu lambat banget.",
       "text": "*N+1 query* bikin API-mu lambat",
       "subtext": "Kesalahan Laravel paling umum"
     },
     {
       "type": "code",
       "narration": "Lihat kode ini. Kita ambil semua post, lalu di dalam foreach kita panggil relasi author. Setiap iterasi menjalankan satu query baru ke database.",
+      "speech": "Lihat kode ini. Kita ambil semua post, lalu di dalam for each kita panggil relasi author. Setiap iterasi menjalankan satu query baru ke database.",
       "language": "php",
       "filename": "PostController.php",
       "code": "$posts = Post::all();\n\nforeach ($posts as $post) {\n    echo $post->author->name;\n}",
@@ -42,6 +44,7 @@
     {
       "type": "points",
       "narration": "Tiga tips. Aktifkan preventLazyLoading di development, cek jumlah query pakai Debugbar, dan selalu pakai with untuk relasi yang dipakai di dalam loop.",
+      "speech": "Tiga tips. Aktifkan prevent lazy loading di development, cek jumlah query pakai debug bar, dan selalu pakai with untuk relasi yang dipakai di dalam loop.",
       "title": "3 tips *anti N+1*",
       "items": [
         "preventLazyLoading() di development",

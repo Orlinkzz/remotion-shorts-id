@@ -53,6 +53,11 @@ Contoh siap pakai: `public/videos/n-plus-one/`. File `voice.mp3` di sana hanya a
 
 Tidak ada server MCP: seluruh alur berbasis berkas dan perintah npm, jadi agent yang sudah ada di VS Code cukup menulis `video.json` lalu menjalankan skrip. `AGENTS.md` (dan `CLAUDE.md` yang mengimpornya) berisi petunjuk untuk agent. `video.schema.json` memberi autocomplete dan validasi saat mengedit `video.json` di VS Code, dan `npm run validate` memeriksa naskah sebelum render.
 
+**Skill dan prompt siap pakai** ada di `remotion-shorts-skill/`:
+
+- `SKILL.md`: aturan lengkap untuk agent (skema scene, batas panjang, ejaan bantu TTS, daftar template), termasuk batas apa saja yang tidak boleh dilakukan agent. Untuk Claude Code, salin foldernya ke `.claude/skills/remotion-shorts/`.
+- `prompt.md`: prompt pendek untuk agent di dalam repo, dan prompt lengkap untuk chatbot di luar repo (ChatGPT, Claude.ai, Gemini) yang menghasilkan `video.json` siap validasi.
+
 ## Cara sinkronisasi bekerja
 
 Teks caption diambil dari `narration` di naskah, bukan dari hasil Whisper, sehingga ejaan istilah teknis (Laravel, PostgreSQL, Next.js) selalu benar. Whisper hanya memberi timestamp: kata naskah disejajarkan dengan kata Whisper (pencocokan fuzzy), kata yang tidak terdeteksi diinterpolasi. Scene mulai sedikit sebelum kata pertamanya diucapkan, dan durasi video = panjang audio + jeda akhir.

@@ -1,0 +1,53 @@
+{
+  "$schema": "../../../video.schema.json",
+  "title": "Jangan pakai || untuk nilai default di JavaScript",
+  "voice": "voice.mp3",
+  "scenes": [
+    {
+      "type": "hook",
+      "narration": "Masih pakai operator OR untuk nilai default di JavaScript? Hati-hati, angka nol bisa hilang.",
+      "text": "*||* bisa menghapus angka 0",
+      "subtext": "Bug kecil yang sering lolos review"
+    },
+    {
+      "type": "code",
+      "narration": "Lihat contoh ini. Volume diatur ke nol, tapi hasilnya malah lima puluh. Operator OR menganggap nol sebagai nilai falsy, jadi langsung diganti nilai default.",
+      "speech": "Lihat contoh ini. Volume diatur ke nol, tapi hasilnya malah lima puluh. Operator OR menganggap nol sebagai nilai fol si, jadi langsung diganti nilai default.",
+      "language": "javascript",
+      "filename": "player.js",
+      "code": "const config = { volume: 0 };\n\nconst volume = config.volume || 50;\nconsole.log(volume); // 50",
+      "highlightLines": [
+        [3, 3],
+        [4, 4]
+      ]
+    },
+    {
+      "type": "code",
+      "narration": "Solusinya pakai nullish coalescing, yaitu dua tanda tanya. Operator ini hanya mengganti null dan undefined, jadi nol tetap nol.",
+      "speech": "Solusinya pakai nalis kolesing, yaitu dua tanda tanya. Operator ini hanya mengganti null dan andefaind, jadi nol tetap nol.",
+      "language": "javascript",
+      "filename": "player.js",
+      "code": "const config = { volume: 0 };\n\nconst volume = config.volume ?? 50;\nconsole.log(volume); // 0",
+      "highlightLines": [
+        [3, 3],
+        [4, 4]
+      ]
+    },
+    {
+      "type": "points",
+      "narration": "Ingat tiga hal. Dua tanda tanya hanya untuk null dan undefined. OR untuk semua nilai falsy, termasuk nol dan string kosong. Gabungkan dengan optional chaining untuk objek bersarang.",
+      "speech": "Ingat tiga hal. Dua tanda tanya hanya untuk null dan andefaind. OR untuk semua nilai fol si, termasuk nol dan string kosong. Gabungkan dengan opsional ceining untuk objek bersarang.",
+      "title": "Kapan pakai *??*",
+      "items": [
+        "?? hanya untuk null dan undefined",
+        "|| untuk semua nilai falsy",
+        "Gabung dengan ?. untuk objek bersarang"
+      ]
+    },
+    {
+      "type": "outro",
+      "narration": "Follow untuk tips JavaScript berikutnya.",
+      "cta": "Follow untuk tips JavaScript lainnya"
+    }
+  ]
+}
