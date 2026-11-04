@@ -5,7 +5,10 @@ import { Outro } from "./Outro";
 import { Points } from "./Points";
 import { TemplateScene } from "./TemplateScene";
 
-export const SceneView: React.FC<{ scene: Scene }> = ({ scene }) => {
+export const SceneView: React.FC<{ scene: Scene; videoId?: string }> = ({
+  scene,
+  videoId,
+}) => {
   switch (scene.type) {
     case "hook":
       return <Hook text={scene.text} subtext={scene.subtext} />;
@@ -21,7 +24,13 @@ export const SceneView: React.FC<{ scene: Scene }> = ({ scene }) => {
     case "points":
       return <Points title={scene.title} items={scene.items} />;
     case "template":
-      return <TemplateScene name={scene.template} />;
+      return (
+        <TemplateScene
+          name={scene.template}
+          props={scene.props}
+          videoId={videoId}
+        />
+      );
     case "outro":
       return <Outro cta={scene.cta} handle={scene.handle} />;
   }

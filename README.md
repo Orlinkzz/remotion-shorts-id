@@ -6,7 +6,7 @@ Generator video pendek edukasi (Reels / TikTok / YouTube Shorts, 1080×1920) di 
 Gabungan dua template:
 
 - **remotion-dev/template-tiktok** → basis proyek, caption per kata, pipeline Whisper.cpp.
-- **reactvideoeditor/remotion-templates** (MIT) → ke-81 template disalin ke `src/templates/`. Tiga di antaranya (`bounce-text`, `animated-list`, `end-card`) juga diadaptasi jadi scene berparameter `hook`, `points`, `outro` di `src/scenes/`.
+- **reactvideoeditor/remotion-templates** (MIT) → ke-81 template ditulis ulang di `src/templates/` untuk 9:16 dan bisa diisi lewat `props`. Tiga di antaranya (`bounce-text`, `animated-list`, `end-card`) juga diadaptasi jadi scene berparameter `hook`, `points`, `outro` di `src/scenes/`.
 
 Scene `code` (syntax highlight) dibuat baru karena tidak ada di kedua template.
 
@@ -41,13 +41,24 @@ Contoh siap pakai: `public/videos/n-plus-one/`. File `voice.mp3` di sana hanya a
 - `voice.mp3` hasil rekaman tidak akan ditimpa kecuali ditambah `-- --force`.
 - Cek lisensi/ketentuan provider sebelum dipakai komersial, terutama `edge` dan `gtranslate`.
 
-## 81 template RVE
+## 81 template
 
-- **Galeri:** `npm run dev`, lalu buka folder **Templates** di sidebar Studio (`tpl-<nama>`), 6 detik per template di 1080×1920.
-- **Dipakai di video:** scene `{ "type": "template", "narration": "...", "template": "stat-counter" }` merender template apa adanya, memenuhi seluruh frame.
-- **Batasan:** teks, warna, dan angka di tiap template tertulis langsung di kodenya (aslinya contoh tanpa props), dan banyak yang dirancang untuk landscape sehingga tata letaknya di 9:16 perlu dicek satu per satu. Untuk yang sering dipakai, jadikan scene berparameter seperti `Hook`/`Points`/`Outro`.
-- **Diadaptasi:** `ken-burns`, `parallax-pan`, `zoom-pulse` memakai animasi CSS dan `next/image`, yang tidak cocok untuk render video. Ketiganya sudah diubah ke interpolasi berbasis frame dan `<Img>` Remotion. Gambar bawaannya berasal dari Unsplash/Pexels, jadi butuh internet saat render.
-- Setelah menambah/menghapus file di `src/templates/`: `npm run gen:templates`.
+Semua template dari [RVE Remotion Templates](https://www.reactvideoeditor.com) (MIT) sudah ditulis ulang untuk video 9:16. Isinya diatur lewat `props`, tampil di atas latar NotebookPaper, konten berada di area aman (tidak tertutup caption), dan animasinya deterministik (berbasis frame, tanpa animasi CSS atau `Math.random`).
+
+```json
+{
+  "type": "template",
+  "narration": "Setelah pakai cache, waktu muat turun drastis.",
+  "template": "stat-counter",
+  "props": { "value": 180, "unit": "ms", "title": "Waktu muat *setelah* cache" }
+}
+```
+
+- **Props:** `title`, `subtitle`, `text`, `items`, `values`, `value`, `unit`, `images`, `accent`. Semua opsional; yang kosong memakai contoh bawaan. Field yang dipakai tiap template ada di [docs/templates.md](docs/templates.md).
+- **Kategori:** teks/judul, data/chart, logo, gambar, efek layar, latar animasi, dan transisi (layar A `items[0]` → layar B `title`).
+- **Gambar:** `images` relatif ke folder video (mis. `public/videos/<id>/img/a.png` → `"img/a.png"`). Tanpa gambar, template menampilkan placeholder gradien, jadi render tidak butuh internet. `npm run validate` memeriksa file gambarnya.
+- **Galeri:** `npm run dev`, folder **Templates** (`tpl-<nama>`). Props bisa dicoba langsung di panel kanan Studio.
+- Menambah template: lihat [CONTRIBUTING.md](CONTRIBUTING.md), lalu `npm run gen:templates`.
 
 ## Bekerja dengan AI di VS Code
 
@@ -73,7 +84,7 @@ Logika ini diuji: `npm run test:timing`.
 | `code` | `language`, `filename?`, `code`, `highlightLines?` (mis. `[[1,1],[3,4]]`, disorot bergantian) |
 | `points` | `title?`, `items` (1–6) |
 | `outro` | `cta`, `handle?` (default: nama brand di `theme.ts`) |
-| `template` | `template` = nama salah satu dari 81 template RVE (lihat `src/templates/names.ts`) |
+| `template` | `template` = nama salah satu dari 81 template, `props?` = isi template (lihat [docs/templates.md](docs/templates.md)) |
 
 Semua scene juga boleh punya `speech` (teks untuk TTS bila pelafalan beda dari caption).
 
@@ -95,16 +106,21 @@ src/
   components/                 Captions, Emphasis
   lib/align.ts                sinkronisasi naskah <-> Whisper (logika murni, teruji)
   lib/load-video.ts           memuat video.json + audio + captions.json
-  templates/                  81 template RVE + names.ts/registry.ts (otomatis)
+  lib/template-kit.tsx        props, warna, area aman, dan helper bersama untuk template
+  templates/                  81 template + names.ts/registry.ts (otomatis)
   lib/voice/                  VoiceProvider (fase 1: RecordedVoice; fase 3: TtsVoice)
 scripts/                      tts, tts-providers, transcribe, render, validate, gen-schema, gen-template-registry, test-timing
 public/videos/<id>/           video.json, voice.mp3, captions.json
 ```
+
+## Kontribusi
+
+Kontribusi terbuka: template, scene, provider TTS, video contoh, atau dokumentasi. Panduan setup, alur PR, dan aturan kode ada di [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Lisensi
 
 Kode asli proyek ini berlisensi **MIT** (`LICENSE`). Komponen pihak ketiga tetap memakai lisensinya sendiri, rinciannya di `NOTICE.md`:
 
 - **Remotion** memakai **Remotion License**, bukan MIT: gratis (termasuk untuk video komersial) bagi individu, perusahaan dengan maksimal 3 karyawan, dan nirlaba; perusahaan yang lebih besar wajib membeli Company License. Cek kelayakanmu di https://www.remotion.dev/license.
-- Template RVE: gratis dipakai, atribusi dihargai (header asli dipertahankan).
+- Template RVE: gratis dipakai, atribusi dihargai (tiap file mencantumkan sumbernya).
 - Audio TTS mengikuti ketentuan provider yang dipakai; untuk konten komersial pakai `azure`/`google` atau rekaman sendiri.

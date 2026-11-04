@@ -1,45 +1,58 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "liquid-wave" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Gelombang cair berlapis di bagian bawah layar, di belakang judul.
+// Props: title, subtitle, accent.
+import {
+  colors,
+  TitleCard,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Data *mengalir*",
+  subtitle: "Dari request sampai response",
+};
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+const POINTS = 48;
 
-export default function LiquidWave() {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
+export default function LiquidWave(props: TemplateProps) {
+  const { title, subtitle, accent, frame, durationInFrames, width, height } =
+    useTemplate(props, defaults);
+  const loops = Math.max(1, Math.round(durationInFrames / 90));
+  const t = (frame / durationInFrames) * Math.PI * 2 * loops;
 
-  const numberOfPoints = 50;
-  const points = Array.from({ length: numberOfPoints + 1 }).map((_, i) => {
-    const x = (i / numberOfPoints) * width;
-    const waveHeight = Math.sin(frame / 20 + i / 5) * 50;
-    const y = height / 2 + waveHeight;
-    return `${x},${y}`;
-  });
+  const wave = (base: number, amp: number, phase: number, k: number) => {
+    const pts = Array.from({ length: POINTS + 1 }).map((_, i) => {
+      const x = (i / POINTS) * width;
+      const y =
+        base + Math.sin(t + phase + (i / POINTS) * Math.PI * 2 * k) * amp;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    return `M 0,${height} L ${pts.join(" L ")} L ${width},${height} Z`;
+  };
 
   return (
-    <svg width={width} height={height} style={{ background: "#111827" }}>
-      <defs>
-        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="#1e3a8a" />
-          <stop offset="100%" stopColor="#3b82f6" />
-        </linearGradient>
-      </defs>
-      <path
-        d={`M 0,${height} ${points.join(" ")} ${width},${height} Z`}
-        fill="url(#gradient)"
-        style={{
-          filter: "blur(10px)",
-        }}
-      />
-    </svg>
+    <>
+      <svg
+        width={width}
+        height={height}
+        style={{ position: "absolute", inset: 0 }}
+      >
+        <defs>
+          <linearGradient id="liquid-wave-a" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={accent} stopOpacity={0.5} />
+            <stop offset="100%" stopColor={colors.accent2} stopOpacity={0.5} />
+          </linearGradient>
+        </defs>
+        <path
+          d={wave(height * 0.62, 50, 0, 1)}
+          fill={colors.accent2}
+          opacity={0.18}
+        />
+        <path d={wave(height * 0.68, 60, 2, 1.5)} fill="url(#liquid-wave-a)" />
+        <path d={wave(height * 0.76, 40, 4, 2)} fill={accent} opacity={0.25} />
+      </svg>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+    </>
   );
 }

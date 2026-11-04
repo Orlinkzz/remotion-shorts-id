@@ -1,102 +1,40 @@
-"use client";
+// Diadaptasi dari "cross-dissolve" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B dengan saling melebur (crossfade).
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import {
+  colors,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  items: ["Kode sinkron"],
+  title: "Jadi *async/await*",
+  subtitle: "Tanpa memblokir thread utama",
+};
 
-export default function CrossDissolve() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const totalFrames = fps * 2.5;
-  const progress = Math.min(frame / totalFrames, 1);
-
-  // Scene A fades out while Scene B fades in simultaneously
-  const sceneAOpacity = 1 - progress;
-  const sceneBOpacity = progress;
+export default function CrossDissolve(props: TemplateProps) {
+  const { items, title, subtitle, accent } = useTemplate(props, defaults);
+  const p = useTransitionProgress();
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {/* Scene A */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: sceneAOpacity,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            marginBottom: "1rem",
-          }}
+    <>
+      <TitleCard
+        title={title}
+        subtitle={subtitle}
+        accent={accent}
+        style={{ opacity: p }}
+      />
+      {p < 1 ? (
+        <TitleCard
+          title={items[0]}
+          accent={accent}
+          background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
+          style={{ opacity: 1 - p }}
         />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-          }}
-        >
-          Scene A
-        </h2>
-        <p style={{ color: "#93c5fd", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Dissolving away...
-        </p>
-      </div>
-
-      {/* Scene B */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: sceneBOpacity,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #a855f7, #7c3aed)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-          }}
-        >
-          Scene B
-        </h2>
-        <p style={{ color: "#c084fc", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Appearing...
-        </p>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }

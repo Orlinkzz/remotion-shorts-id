@@ -46,12 +46,30 @@ export const outroSceneSchema = z.object({
   handle: z.string().optional(),
 });
 
-// Salah satu dari 81 template RVE apa adanya (teks/warna bawaan template).
+// Isi template. Semua opsional: tiap template hanya memakai sebagian field
+// (lihat docs/templates.md) dan punya contoh bawaan untuk field yang kosong.
+export const templatePropsSchema = z
+  .object({
+    title: z.string().min(1).optional(), // *kata* diberi warna aksen
+    subtitle: z.string().min(1).optional(),
+    text: z.string().min(1).optional(), // kutipan, isi notifikasi, kalimat panjang
+    items: z.array(z.string().min(1)).min(1).max(8).optional(), // daftar/label
+    values: z.array(z.number()).min(1).max(8).optional(), // data chart, urut sesuai items
+    value: z.number().optional(), // angka tunggal: counter, persen, hitung mundur
+    unit: z.string().optional(), // akhiran angka, mis. "%", "ms", "x"
+    // Relatif terhadap folder video (mis. "img/before.png") atau URL http(s).
+    images: z.array(z.string().min(1)).min(1).max(8).optional(),
+    accent: z.string().optional(), // warna aksen CSS, default theme.colors.accent
+  })
+  .strict();
+
+// Salah satu dari 81 template (src/templates), diisi lewat props.
 export const templateSceneSchema = z.object({
   type: z.literal("template"),
   narration,
   speech,
   template: z.enum(templateNames),
+  props: templatePropsSchema.optional(),
 });
 
 export const sceneSchema = z.discriminatedUnion("type", [
@@ -74,5 +92,6 @@ export type HookScene = z.infer<typeof hookSceneSchema>;
 export type CodeScene = z.infer<typeof codeSceneSchema>;
 export type PointsScene = z.infer<typeof pointsSceneSchema>;
 export type TemplateScene = z.infer<typeof templateSceneSchema>;
+export type TemplateSceneProps = z.infer<typeof templatePropsSchema>;
 export type OutroScene = z.infer<typeof outroSceneSchema>;
 export type VideoSpec = z.infer<typeof videoSchema>;

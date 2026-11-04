@@ -1,120 +1,127 @@
-"use client";
+// Diadaptasi dari "logo-split-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Dua panel terbelah ke kiri-kanan dan membuka logo/nama brand.
+// Props: title (nama brand), subtitle (tagline), images[0] (logo, opsional), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+const defaults = {
+  title: "Senimankode",
+  subtitle: "Belajar coding lewat video pendek",
+};
 
-export default function LogoSplitReveal() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+export default function LogoSplitReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
 
-  // Each half expands outward from center
-  const revealProgress = interpolate(frame, [10, fps * 1.5], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
+  const open = spring({
+    frame: frame - 8,
+    fps,
+    config: { damping: 18, stiffness: 90 },
   });
+  const subIn = interpolate(frame, [fps * 1, fps * 1.5], [0, 1], clamp);
+  const logo = images?.[0];
 
-  const halfWidth = interpolate(revealProgress, [0, 1], [0, 75]);
-  const leftTranslate = interpolate(revealProgress, [0, 1], [0, -75]);
-  const rightTranslate = interpolate(revealProgress, [0, 1], [0, 75]);
-
-  // Company name fades in
-  const nameOpacity = interpolate(frame, [fps * 1.6, fps * 2.2], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const nameTranslateY = interpolate(frame, [fps * 1.6, fps * 2.2], [15, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
+  const panel = (side: "left" | "right"): React.CSSProperties => ({
+    position: "absolute",
+    top: 0,
+    bottom: 0,
+    width: "50%",
+    [side]: 0,
+    background:
+      side === "left"
+        ? `linear-gradient(135deg, ${accent}, ${colors.accent2})`
+        : `linear-gradient(135deg, ${colors.accent2}, ${accent})`,
+    borderRadius: side === "left" ? "36px 0 0 36px" : "0 36px 36px 0",
+    transform: `translateX(${(side === "left" ? -1 : 1) * open * 110}%)`,
+    opacity: 1 - open * 0.9,
   });
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        gap: 48,
+        fontFamily: sansFont,
+        textAlign: "center",
       }}
     >
       <div
         style={{
           position: "relative",
-          height: "80px",
+          width: "100%",
+          minHeight: 280,
           display: "flex",
           alignItems: "center",
+          justifyContent: "center",
+          padding: "40px 32px",
         }}
       >
-        {/* Left half */}
         <div
           style={{
-            width: `${halfWidth}px`,
-            height: "80px",
-            background: "linear-gradient(135deg, #4361ee, #6240c9)",
-            borderRadius: "16px 0 0 16px",
-            transform: `translateX(${leftTranslate}px)`,
-            overflow: "hidden",
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
-            justifyContent: "flex-end",
+            gap: 32,
+            opacity: open,
+            transform: `scale(${0.85 + 0.15 * open})`,
           }}
         >
-          <span
+          {logo ? (
+            <div
+              style={{
+                width: 260,
+                height: 260,
+                borderRadius: 48,
+                overflow: "hidden",
+              }}
+            >
+              <TemplateImage src={logo} style={{ objectFit: "contain" }} />
+            </div>
+          ) : null}
+          <div
             style={{
-              color: "white",
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              fontFamily: "Inter, sans-serif",
-              marginRight: "2px",
-              opacity: revealProgress,
+              fontSize: fitFontSize(plain(title), 140, 72, 10),
+              fontWeight: 900,
+              lineHeight: 1,
+              letterSpacing: -2,
+              color: colors.text,
             }}
           >
-            LO
-          </span>
+            <Emphasis text={title} color={accent} />
+          </div>
         </div>
-        {/* Right half */}
-        <div
-          style={{
-            width: `${halfWidth}px`,
-            height: "80px",
-            background: "linear-gradient(135deg, #6240c9, #7209b7)",
-            borderRadius: "0 16px 16px 0",
-            transform: `translateX(${rightTranslate}px)`,
-            overflow: "hidden",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-start",
-          }}
-        >
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              fontFamily: "Inter, sans-serif",
-              marginLeft: "2px",
-              opacity: revealProgress,
-            }}
-          >
-            GO
-          </span>
-        </div>
+        <div style={panel("left")} />
+        <div style={panel("right")} />
       </div>
-      <p
+      <div
         style={{
-          color: "white",
-          fontSize: "1.8rem",
-          fontWeight: "bold",
-          fontFamily: "Inter, sans-serif",
-          marginTop: "1.5rem",
-          opacity: nameOpacity,
-          transform: `translateY(${nameTranslateY}px)`,
+          fontSize: 48,
+          fontWeight: 600,
+          lineHeight: 1.3,
+          color: colors.muted,
+          opacity: subIn,
+          transform: `translateY(${(1 - subIn) * 20}px)`,
         }}
       >
-        Company Name
-      </p>
+        {subtitle}
+      </div>
     </div>
   );
 }

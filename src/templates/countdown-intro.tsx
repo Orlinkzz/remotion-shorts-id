@@ -1,113 +1,131 @@
-"use client";
+// Diadaptasi dari "countdown-intro" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Hitung mundur dengan cincin progres, lalu judul meletup ("MULAI!").
+// Props: value (angka awal, default 3), title (teks setelah hitungan), subtitle (opsional), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+const defaults = {
+  value: 3,
+  title: "MULAI!",
+  subtitle: "Tantangan coding hari ini",
+};
 
-export default function CountdownIntro() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const SIZE = 520;
+const R = 220;
 
-  const totalCountdownFrames = fps * 3;
-  const secondFrames = fps;
-
-  const currentSecond = Math.max(3 - Math.floor(frame / secondFrames), 0);
-  const isCountdownDone = frame >= totalCountdownFrames;
-
-  const frameInSecond = frame % secondFrames;
-  const ringProgress = frameInSecond / secondFrames;
-
-  const circumference = 2 * Math.PI * 70;
-  const dashOffset = isCountdownDone ? circumference : circumference * ringProgress;
-
-  const numberOpacity = isCountdownDone ? 0 : 1;
-
-  const goScale = spring({
-    frame: Math.max(frame - totalCountdownFrames, 0),
+export default function CountdownIntro(props: TemplateProps) {
+  const { value, title, subtitle, accent, frame, fps, durationInFrames } =
+    useTemplate(props, defaults);
+  const start = Math.max(1, Math.min(10, Math.round(value)));
+  // Tiap angka maksimal 1 dtk; hitungan selesai paling lambat di 60% scene.
+  const per = Math.max(4, Math.min(fps, (durationInFrames * 0.6) / start));
+  const total = per * start;
+  const done = frame >= total;
+  const current = start - Math.floor(frame / per);
+  const ring = (frame % per) / per;
+  const circumference = 2 * Math.PI * R;
+  const tick = spring({
+    frame: frame % per,
+    fps,
+    from: 1.3,
+    to: 1,
+    config: { damping: 12 },
+  });
+  const go = spring({
+    frame: frame - total,
     fps,
     config: { damping: 8, stiffness: 100 },
   });
-
-  const goOpacity = interpolate(
-    frame,
-    [totalCountdownFrames, totalCountdownFrames + 5],
-    [0, 1],
-    { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-  );
+  const subIn = interpolate(frame, [total + 8, total + 20], [0, 1], clamp);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
-      <div style={{ position: "relative", width: 180, height: 180 }}>
-        <svg
-          width={180}
-          height={180}
-          style={{ transform: "rotate(-90deg)" }}
-        >
-          <circle
-            cx={90}
-            cy={90}
-            r={70}
-            fill="none"
-            stroke="#1e293b"
-            strokeWidth={6}
-          />
-          {!isCountdownDone && (
+      {!done ? (
+        <div style={{ position: "relative", width: SIZE, height: SIZE }}>
+          <svg
+            width={SIZE}
+            height={SIZE}
+            style={{ transform: "rotate(-90deg)" }}
+          >
             <circle
-              cx={90}
-              cy={90}
-              r={70}
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={R}
+              fill="rgba(17,24,39,0.6)"
+              stroke={colors.surfaceAlt}
+              strokeWidth={18}
+            />
+            <circle
+              cx={SIZE / 2}
+              cy={SIZE / 2}
+              r={R}
               fill="none"
-              stroke="#3b82f6"
-              strokeWidth={6}
+              stroke={accent}
+              strokeWidth={18}
               strokeDasharray={circumference}
-              strokeDashoffset={dashOffset}
+              strokeDashoffset={circumference * ring}
               strokeLinecap="round"
             />
-          )}
-        </svg>
-        {!isCountdownDone && (
-          <span
+          </svg>
+          <div
             style={{
               position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              color: "white",
-              fontSize: "4rem",
-              fontWeight: 700,
-              opacity: numberOpacity,
-              fontFamily: "Inter, sans-serif",
+              inset: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 260,
+              fontWeight: 900,
+              color: colors.text,
+              transform: `scale(${tick})`,
             }}
           >
-            {currentSecond}
-          </span>
-        )}
-        {isCountdownDone && (
-          <span
-            style={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: `translate(-50%, -50%) scale(${goScale})`,
-              color: "#3b82f6",
-              fontSize: "3.5rem",
-              fontWeight: 800,
-              opacity: goOpacity,
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            GO!
-          </span>
-        )}
-      </div>
+            {current}
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{ transform: `scale(${go})` }}>
+            <TemplateTitle
+              text={title}
+              accent={accent}
+              max={150}
+              style={{ color: accent }}
+            />
+          </div>
+          {subtitle ? (
+            <div
+              style={{
+                marginTop: 36,
+                fontSize: 50,
+                fontWeight: 600,
+                color: colors.muted,
+                opacity: subIn,
+              }}
+            >
+              {subtitle}
+            </div>
+          ) : null}
+        </>
+      )}
     </div>
   );
 }

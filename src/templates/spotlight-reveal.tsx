@@ -1,99 +1,74 @@
-"use client";
+// Diadaptasi dari "spotlight-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Lingkaran sorot membesar dari tengah, membuka gambar atau judul dari kegelapan.
+// Props: images[0] (opsional), title + subtitle (kartu judul / label di atas gambar), accent.
+import { Easing, interpolate } from "remotion";
+import {
+  clamp,
+  contentArea,
+  TemplateImage,
+  TemplateTitle,
+  TitleCard,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Fitur *baru*",
+  subtitle: "Yang jarang orang tahu",
+};
 
-export default function SpotlightReveal() {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
+const CENTER = "50% 42%";
 
-  // Clip-path radius grows from 0% to 75%
-  const radius = interpolate(frame, [0, durationInFrames * 0.8], [0, 75], {
-    extrapolateRight: "clamp",
-  });
-
-  // Glow opacity peaks mid-animation then fades
-  const glowOpacity = interpolate(
-    frame,
-    [0, durationInFrames * 0.3, durationInFrames * 0.8],
-    [0, 0.6, 0],
-    { extrapolateRight: "clamp" }
+export default function SpotlightReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps, height } = useTemplate(
+    props,
+    defaults,
   );
+  const maxRadius = height * 0.75;
+  const r = interpolate(frame, [0, fps * 1.5], [0, maxRadius], {
+    ...clamp,
+    easing: Easing.out(Easing.cubic),
+  });
+  const glow = interpolate(
+    frame,
+    [0, fps * 0.6, fps * 1.6],
+    [0, 0.8, 0],
+    clamp,
+  );
+  const image = images?.[0];
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#0a0a0a",
-        overflow: "hidden",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {/* Revealed content behind clip */}
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      {image ? (
+        <>
+          <TemplateImage src={image} />
+          <div style={{ ...contentArea, bottom: "auto" }}>
+            <TemplateTitle
+              text={title}
+              accent={accent}
+              max={92}
+              style={{ textShadow: "0 4px 24px rgba(0,0,0,0.8)" }}
+            />
+          </div>
+        </>
+      ) : (
+        <TitleCard title={title} subtitle={subtitle} accent={accent} />
+      )}
+      {/* Di luar sorotan: gelap transparan, latar tetap samar terlihat */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(135deg, #111827, #1e1b4b)",
-          clipPath: `circle(${radius}% at 50% 50%)`,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
+          background: `radial-gradient(circle at ${CENTER}, transparent ${r}px, rgba(3,4,10,0.9) ${r + 6}px)`,
+          opacity: r >= maxRadius ? 0 : 1,
         }}
-      >
-        {/* Decorative top bar */}
-        <div
-          style={{
-            width: "80px",
-            height: "4px",
-            background: "linear-gradient(90deg, #3b82f6, #a855f7)",
-            borderRadius: "2px",
-            marginBottom: "1.5rem",
-          }}
-        />
-        <h1
-          style={{
-            color: "white",
-            fontSize: "3.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            letterSpacing: "0.1em",
-          }}
-        >
-          REVEALED
-        </h1>
-        <p
-          style={{
-            color: "#c4b5fd",
-            fontSize: "1.1rem",
-            marginTop: "0.75rem",
-          }}
-        >
-          Spotlight reveal transition
-        </p>
-        {/* Decorative bottom bar */}
-        <div
-          style={{
-            width: "80px",
-            height: "4px",
-            background: "linear-gradient(90deg, #a855f7, #3b82f6)",
-            borderRadius: "2px",
-            marginTop: "1.5rem",
-          }}
-        />
-      </div>
-
-      {/* Glow at the edge of the circle */}
+      />
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: `radial-gradient(circle at 50% 50%, transparent ${radius - 2}%, rgba(139, 92, 246, ${glowOpacity}) ${radius}%, transparent ${radius + 3}%)`,
-          pointerEvents: "none",
+          background: `radial-gradient(circle at ${CENTER}, transparent ${Math.max(0, r - 30)}px, ${accent} ${r}px, transparent ${r + 30}px)`,
+          opacity: glow,
         }}
       />
     </div>

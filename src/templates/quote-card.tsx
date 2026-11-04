@@ -1,87 +1,94 @@
-"use client";
+// Diadaptasi dari "quote-card" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kartu kutipan: tanda kutip besar, kutipan miring, lalu nama penulisnya.
+// Props: text (kutipan), subtitle (penulis/sumber), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  fitFontSize,
+  sansFont,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate } from "remotion";
+const defaults = {
+  text: "Program harus ditulis agar dibaca manusia, dan hanya kebetulan bisa dijalankan mesin.",
+  subtitle: "Harold Abelson",
+};
 
-export default function QuoteCard() {
-  const frame = useCurrentFrame();
-
-  const quoteMarkOpacity = interpolate(frame, [0, 15], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const textOpacity = interpolate(frame, [10, 30], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const attributionOpacity = interpolate(frame, [30, 45], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const attributionX = interpolate(frame, [30, 45], [40, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+export default function QuoteCard(props: TemplateProps) {
+  const { text, subtitle, accent, frame, fps } = useTemplate(props, defaults);
+  const markIn = spring({ frame, fps, config: { damping: 12 } });
+  const textIn = interpolate(frame, [10, 30], [0, 1], clamp);
+  const byIn = interpolate(frame, [30, 45], [0, 1], clamp);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        padding: "4rem",
-        overflow: "hidden",
+        justifyContent: "center",
+        fontFamily: sansFont,
       }}
     >
-      <span
+      <div
         style={{
-          color: "#3b82f6",
-          fontSize: "6rem",
-          fontWeight: 700,
-          lineHeight: 1,
-          opacity: quoteMarkOpacity,
-          fontFamily: "Georgia, serif",
-          marginBottom: "1rem",
-        }}
-      >
-        {"\u201C"}
-      </span>
-      <p
-        style={{
-          color: "white",
-          fontSize: "1.8rem",
-          fontWeight: 400,
-          lineHeight: 1.6,
+          width: "100%",
+          padding: "64px 56px",
+          borderRadius: 40,
+          background: "rgba(17, 24, 39, 0.72)",
+          border: `2px solid ${colors.surfaceAlt}`,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           textAlign: "center",
-          maxWidth: "700px",
-          margin: 0,
-          opacity: textOpacity,
-          fontFamily: "Georgia, serif",
-          fontStyle: "italic",
         }}
       >
-        Design is not just what it looks like. Design is how it works.
-      </p>
-      <p
-        style={{
-          color: "#9ca3af",
-          fontSize: "1.1rem",
-          fontWeight: 500,
-          margin: 0,
-          marginTop: "2rem",
-          opacity: attributionOpacity,
-          transform: `translateX(${attributionX}px)`,
-          fontFamily: "Inter, sans-serif",
-        }}
-      >
-        — Steve Jobs
-      </p>
+        <div
+          style={{
+            fontFamily: "Georgia, serif",
+            fontSize: 220,
+            fontWeight: 700,
+            lineHeight: 0.8,
+            height: 130,
+            color: accent,
+            opacity: markIn,
+            transform: `scale(${markIn})`,
+          }}
+        >
+          {"“"}
+        </div>
+        <div
+          style={{
+            fontFamily: "Georgia, serif",
+            fontStyle: "italic",
+            fontSize: fitFontSize(text, 72, 44, 40),
+            lineHeight: 1.4,
+            color: colors.text,
+            opacity: textIn,
+            transform: `translateY(${(1 - textIn) * 20}px)`,
+          }}
+        >
+          {text}
+        </div>
+        {subtitle ? (
+          <div
+            style={{
+              marginTop: 48,
+              fontSize: 44,
+              fontWeight: 700,
+              color: colors.muted,
+              opacity: byIn,
+              transform: `translateX(${(1 - byIn) * 40}px)`,
+            }}
+          >
+            — {subtitle}
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

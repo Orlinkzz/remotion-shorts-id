@@ -79,7 +79,7 @@ Field per tipe (hanya ini, tidak ada yang lain):
 | `code` | `language`, `filename?`, `code`, `highlightLines?` | Lihat "Aturan scene code" |
 | `points` | `title?`, `items` | `items` 1–6 butir (ideal 3), masing-masing ≤ 40 karakter. `*kata*` boleh di `title` dan `items` |
 | `outro` | `cta`, `handle?` | `cta` ≤ 40 karakter, tanpa `*`. `handle` dikosongkan saja (default: nama brand) |
-| `template` | `template` | Nama dari daftar di bawah. Tampil apa adanya dengan teks bawaan (bahasa Inggris), tidak bisa diubah |
+| `template` | `template`, `props?` | `template` = nama dari daftar di bawah. `props` = isi template, lihat "Template yang tersedia" |
 
 ### Aturan scene `code`
 
@@ -124,26 +124,64 @@ Ejaan bantu yang sudah terbukti untuk suara TTS Indonesia (`id-ID-ArdiNeural`):
 
 ## Template yang tersedia
 
-Hanya nama ini (persis, huruf kecil):
+Hanya nama di tabel ini (persis, huruf kecil). Isi template diatur lewat `props`; semua field opsional, field yang tidak diisi memakai contoh bawaan (yang **tidak** terkait topik, jadi isi field yang tercantum). Field di luar daftar ini DILARANG:
 
-animated-list, animated-text, area-chart, blinds-transition, bokeh-circles, bounce-text,
-bubble-pop-text, camera-shake, card-flip, chapter-title, chart-animation, cinematic-title-intro,
-circular-progress, clock-wipe, comparison-chart, countdown-intro, countdown-timer, credits-roll,
-cross-dissolve, donut-chart, end-card, fade-through-black, film-burn, floating-bubble-text,
-gallery-grid, geometric-patterns, glitch-text, gradient-shift, grid-pulse, image-carousel,
-image-comparison-slider, image-zoom-reveal, iris-transition, ken-burns, letterbox-reveal, line-chart,
-liquid-wave, logo-blur-reveal, logo-bounce-drop, logo-fade-reveal, logo-glitch-reveal,
-logo-scale-rotate, logo-spin-reveal, logo-split-reveal, logo-stroke-draw, logo-typewriter,
-lower-third, masonry-gallery, matrix-rain, morph-transition, noise-grain, notification-pop,
-parallax-pan, particle-explosion, photo-stack, picture-in-picture, pie-chart, pixel-transition,
-polaroid-frame, popping-text, progress-bars, progress-steps, pulsing-text, push-transition,
-quote-card, rotating-carousel, slide-text, slide-wipe, sound-wave, split-screen, spotlight-reveal,
-starfield, stat-counter, subscribe-reminder, text-highlight, title-split, typewriter-subtitle,
-vignette-pulse, whip-pan, zoom-pulse, zoom-through
+| Field `props` | Isi |
+|---|---|
+| `title` | Judul, ≤ 36 karakter, `*kata*` = warna aksen |
+| `subtitle` | Keterangan pendek, ≤ 40 karakter, tanpa `*` |
+| `text` | Kalimat panjang (kutipan, pesan, teks yang diketik), ≤ 120 karakter |
+| `items` | 1–8 teks pendek (≤ 28 karakter) |
+| `values` | 1–8 angka, urut sesuai `items` |
+| `value` | Satu angka |
+| `unit` | Akhiran angka, mis. `"%"`, `"ms"`, `"x"` |
+| `images` | Path gambar relatif folder video. **Jangan diisi** kecuali pengguna menyebut file gambarnya |
+| `accent` | Warna CSS. Jangan diisi kecuali diminta |
 
-Teks, angka, dan gambar di template **tidak bisa diatur** dan tidak terkait topik, jadi pakai
-`template` hanya kalau pengguna memintanya (mis. efek dekoratif singkat `matrix-rain`). Untuk isi
-materi selalu pakai `hook`, `code`, `points`, atau `outro`.
+| Kategori | Template | Field yang dipakai |
+|---|---|---|
+| Angka | `stat-counter` | `value`, `unit`, `title` (label), `subtitle` |
+| | `circular-progress` | `value` (0–100), `unit`, `title`, `subtitle` |
+| | `countdown-timer` | `value` (detik), `title`, `subtitle` |
+| Chart | `chart-animation`, `line-chart`, `area-chart`, `progress-bars` | `title`, `subtitle`, `items` (label), `values`, `unit` |
+| | `comparison-chart` | `title`, `items` (2 label), `values` (2 angka), `unit` |
+| | `pie-chart`, `donut-chart` | `title`, `items`, `values` (`donut-chart`: + `subtitle`, `value`, `unit` di tengah) |
+| Daftar | `animated-list`, `progress-steps` | `title`, `items` |
+| | `credits-roll` | `title`, `items` |
+| | `split-screen` | `title`, `items` (2 label, mis. "Sebelum", "Sesudah") |
+| | `card-flip` | `title` (istilah), `text` (artinya) |
+| Teks | `animated-text`, `bounce-text`, `bubble-pop-text`, `floating-bubble-text`, `glitch-text`, `popping-text`, `pulsing-text`, `slide-text`, `text-highlight`, `cinematic-title-intro`, `sound-wave` | `title`, `subtitle` (`bubble-pop-text`, `popping-text`, `pulsing-text`: `title` 1–2 kata) |
+| | `title-split` | `title`, `subtitle`, `text` |
+| | `typewriter-subtitle` | `text`, `title` (label kecil) |
+| | `chapter-title` | `value` (nomor bab), `title`, `subtitle` |
+| | `quote-card` | `text` (kutipan), `subtitle` (penulis) |
+| | `notification-pop` | `title` (aplikasi), `text` (pesan), `subtitle` (waktu), `items` (notifikasi lain) |
+| | `countdown-intro` | `value` (1–10), `title`, `subtitle` |
+| Brand | `lower-third` | `title` (nama), `subtitle` (jabatan) |
+| | `subscribe-reminder`, `end-card` | `title`, `subtitle` (`end-card`: + `items`, `text`) |
+| | `logo-blur-reveal`, `logo-bounce-drop`, `logo-fade-reveal`, `logo-glitch-reveal`, `logo-scale-rotate`, `logo-spin-reveal`, `logo-split-reveal`, `logo-stroke-draw`, `logo-typewriter` | `title` (brand), `subtitle` (tagline) |
+| Transisi | `clock-wipe`, `blinds-transition`, `cross-dissolve`, `fade-through-black`, `iris-transition`, `morph-transition`, `pixel-transition`, `push-transition`, `slide-wipe`, `whip-pan`, `zoom-through` | `items` (1 teks: layar A, mis. masalah), `title` + `subtitle` (layar B, mis. solusi) |
+| Latar | `bokeh-circles`, `geometric-patterns`, `gradient-shift`, `grid-pulse`, `liquid-wave`, `matrix-rain`, `noise-grain`, `particle-explosion`, `starfield` | `title`, `subtitle` |
+| Efek | `spotlight-reveal`, `letterbox-reveal`, `film-burn`, `camera-shake`, `vignette-pulse` | `title`, `subtitle` (+ `images` kalau ada gambar) |
+| Gambar | `ken-burns`, `parallax-pan`, `zoom-pulse`, `image-zoom-reveal`, `image-comparison-slider`, `picture-in-picture`, `polaroid-frame`, `gallery-grid`, `masonry-gallery`, `image-carousel`, `rotating-carousel`, `photo-stack` | `images` (wajib), `title`, `items` (caption). **Hanya kalau pengguna memberi gambar** |
+
+Kapan memakai `template`:
+
+- Isi materi utama tetap `hook`, `code`, `points`, `outro`. Template untuk variasi: angka/statistik (`stat-counter`, `comparison-chart`), istilah (`card-flip`), pergantian masalah → solusi (template transisi), atau pembuka bagian (`chapter-title`).
+- Maksimal 2 scene `template` per video, dan selalu isi `props` sesuai topik.
+- `narration` scene template tetap wajib dan harus menjelaskan apa yang tampil.
+
+Contoh:
+
+```json
+{
+  "type": "template",
+  "narration": "Hasilnya, query turun dari seratus satu jadi dua saja.",
+  "speech": "Hasilnya, query turun dari seratus satu jadi dua saja.",
+  "template": "comparison-chart",
+  "props": { "title": "Jumlah *query*", "items": ["Sebelum", "Sesudah"], "values": [101, 2] }
+}
+```
 
 ## Checklist sebelum selesai
 

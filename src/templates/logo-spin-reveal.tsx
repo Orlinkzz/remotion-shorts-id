@@ -1,119 +1,126 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "logo-spin-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Logo bulat berputar 3D menghadap layar, lalu nama brand dan tagline naik masuk.
+// Props: title (nama brand), subtitle (tagline), images[0] (opsional, gambar logo), accent.
+import { spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Senimankode",
+  subtitle: "Belajar coding, satu menit sehari",
+};
 
-import { useCurrentFrame, spring, useVideoConfig } from "remotion";
+const SIZE = 320;
 
-export default function LogoSpinReveal() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const initials = (name: string) =>
+  plain(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("") || "?";
 
-  // Logo 3D rotation using spring
-  const spinProgress = spring({
+export default function LogoSpinReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const image = images?.[0];
+  const spin = spring({
     frame,
     fps,
     config: { damping: 14, stiffness: 60, mass: 1 },
   });
-
-  const rotateY = 90 * (1 - spinProgress);
-  const logoOpacity = spinProgress;
-
-  // Company name slides up after logo settles
-  const textProgress = spring({
+  const text = spring({
     frame: Math.max(0, frame - 20),
     fps,
     config: { damping: 12, stiffness: 70, mass: 0.6 },
   });
-
-  const textOpacity = textProgress;
-  const textTranslateY = 30 * (1 - textProgress);
+  const tag = spring({
+    frame: Math.max(0, frame - 28),
+    fps,
+    config: { damping: 12, stiffness: 70, mass: 0.6 },
+  });
 
   return (
     <div
       style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
-      {/* 3D Perspective Container */}
-      <div
-        style={{
-          perspective: "1000px",
-        }}
-      >
-        {/* Logo - circular with gradient */}
+      <div style={{ perspective: 1600 }}>
         <div
           style={{
-            width: "120px",
-            height: "120px",
+            width: SIZE,
+            height: SIZE,
             borderRadius: "50%",
-            background: "linear-gradient(135deg, #4361ee, #7209b7)",
+            overflow: "hidden",
             display: "flex",
-            justifyContent: "center",
             alignItems: "center",
-            transform: `rotateY(${rotateY}deg)`,
-            opacity: logoOpacity,
-            boxShadow: "0 0 50px rgba(114, 9, 183, 0.4)",
+            justifyContent: "center",
+            background: image
+              ? "transparent"
+              : `linear-gradient(135deg, ${accent}, ${colors.accent2})`,
+            boxShadow: image ? undefined : `0 20px 60px ${accent}55`,
+            transform: `rotateY(${90 * (1 - spin)}deg)`,
+            opacity: spin,
           }}
         >
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.8rem",
-              fontWeight: "800",
-              letterSpacing: "0.1em",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            LOGO
-          </span>
+          {image ? (
+            <TemplateImage src={image} style={{ objectFit: "contain" }} />
+          ) : (
+            <span
+              style={{
+                fontSize: SIZE * 0.42,
+                fontWeight: 900,
+                color: "white",
+                letterSpacing: -4,
+              }}
+            >
+              {initials(title)}
+            </span>
+          )}
         </div>
       </div>
-
-      {/* Company Name - slides up */}
-      <h2
+      <div
         style={{
-          color: "white",
-          fontSize: "2rem",
-          fontWeight: "700",
-          marginTop: "1.5rem",
-          marginBottom: 0,
-          fontFamily: "Inter, sans-serif",
-          letterSpacing: "0.05em",
-          opacity: textOpacity,
-          transform: `translateY(${textTranslateY}px)`,
+          marginTop: 64,
+          fontSize: fitFontSize(plain(title), 120, 64, 11),
+          fontWeight: 900,
+          color: colors.text,
+          letterSpacing: -2,
+          opacity: text,
+          transform: `translateY(${30 * (1 - text)}px)`,
         }}
       >
-        Company Name
-      </h2>
-      <p
+        {plain(title)}
+      </div>
+      <div
         style={{
-          color: "#c084fc",
-          fontSize: "1rem",
-          marginTop: "0.5rem",
-          fontFamily: "Inter, sans-serif",
-          opacity: textOpacity,
-          transform: `translateY(${textTranslateY}px)`,
+          marginTop: 20,
+          fontSize: 46,
+          fontWeight: 600,
+          color: colors.muted,
+          opacity: tag,
+          transform: `translateY(${30 * (1 - tag)}px)`,
         }}
       >
-        Your tagline here
-      </p>
+        {subtitle}
+      </div>
     </div>
   );
 }

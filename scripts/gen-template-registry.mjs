@@ -19,16 +19,52 @@ writeFileSync(
   path.join(dir, "names.ts"),
   `// File ini dibuat otomatis oleh scripts/gen-template-registry.mjs\nexport const templateNames = [\n${names
     .map((n) => `  "${n}",`)
-    .join("\n")}\n] as const;\n\nexport type TemplateName = (typeof templateNames)[number];\n`,
+    .join(
+      "\n",
+    )}\n] as const;\n\nexport type TemplateName = (typeof templateNames)[number];\n`,
 );
 
 writeFileSync(
   path.join(dir, "registry.ts"),
-  `// File ini dibuat otomatis oleh scripts/gen-template-registry.mjs\nimport type { ComponentType } from "react";\n${names
+  `// File ini dibuat otomatis oleh scripts/gen-template-registry.mjs\nimport type { ComponentType } from "react";\nimport type { TemplateProps } from "../lib/template-kit";\n${names
     .map((n) => `import ${pascal(n)} from "./${n}";`)
-    .join("\n")}\nimport type { TemplateName } from "./names";\n\nexport const templateRegistry: Record<TemplateName, ComponentType> = {\n${names
+    .join(
+      "\n",
+    )}\nimport type { TemplateName } from "./names";\n\nexport const templateRegistry: Record<TemplateName, ComponentType<TemplateProps>> = {\n${names
     .map((n) => `  "${n}": ${pascal(n)},`)
     .join("\n")}\n};\n`,
+);
+
+// Galeri Studio: satu <Composition> per template dengan id dan defaultProps
+// literal, supaya tombol Save di panel Props Studio bisa menulis ke file ini.
+// Catatan: props yang disimpan dari Studio akan tertimpa saat skrip ini dijalankan ulang.
+writeFileSync(
+  path.join(process.cwd(), "src", "compositions", "TemplateGallery.tsx"),
+  `// File ini dibuat otomatis oleh scripts/gen-template-registry.mjs
+// Props yang disimpan dari Studio tertimpa saat npm run gen:templates dijalankan ulang.
+import { Composition } from "remotion";
+import { theme } from "../theme";
+import { TemplatePreview, templatePreviewSchema } from "./TemplatePreview";
+
+export const TemplateGallery: React.FC = () => (
+  <>
+${names
+  .map(
+    (n) => `    <Composition
+      id="tpl-${n}"
+      component={TemplatePreview}
+      schema={templatePreviewSchema}
+      defaultProps={{ template: "${n}", props: {} }}
+      width={theme.width}
+      height={theme.height}
+      fps={theme.fps}
+      durationInFrames={theme.fps * 6}
+    />`,
+  )
+  .join("\n")}
+  </>
+);
+`,
 );
 
 console.log(`${names.length} template terdaftar`);

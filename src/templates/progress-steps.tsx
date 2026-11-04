@@ -1,169 +1,130 @@
-/** Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "progress-steps" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Timeline langkah vertikal; langkah aktif maju bergiliran sepanjang scene.
+// Props: title, items (nama langkah, berurutan), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Alur *deploy*",
+  items: ["Commit", "Test", "Build", "Deploy"],
+};
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
-
-export default function ProgressSteps() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const steps = ["Research", "Design", "Build", "Launch"];
-  const framesPerStep = Math.floor(fps * 0.8);
+export default function ProgressSteps(props: TemplateProps) {
+  const { title, items, accent, frame, fps, durationInFrames } = useTemplate(
+    props,
+    defaults,
+  );
+  const lead = Math.round(fps * 0.4);
+  const per = Math.max(6, ((durationInFrames - lead) * 0.85) / items.length);
+  const titleIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
+  const dot = items.length > 5 ? 84 : 104;
+  const gapLine = items.length > 5 ? 34 : 56;
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        background: "linear-gradient(180deg, #111827, #1f2937)",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        alignItems: "center",
-        overflow: "hidden",
-        fontFamily: "Inter, sans-serif",
+        gap: 56,
+        fontFamily: sansFont,
       }}
     >
-      <h2
-        style={{
-          color: "white",
-          fontSize: "2rem",
-          fontWeight: "bold",
-          marginBottom: "60px",
-          margin: 0,
-          marginTop: 0,
-          paddingBottom: "60px",
-        }}
-      >
-        Project Timeline
-      </h2>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: "0px",
-          position: "relative",
-        }}
-      >
-        {steps.map((label, i) => {
-          const stepStart = i * framesPerStep;
-          const fillProgress = interpolate(
+      <div style={{ opacity: titleIn }}>
+        <TemplateTitle text={title} accent={accent} max={96} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column" }}>
+        {items.map((label, i) => {
+          const start = lead + i * per;
+          const fill = interpolate(
             frame,
-            [stepStart, stepStart + framesPerStep * 0.6],
+            [start, start + per * 0.5],
             [0, 1],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
+            clamp,
           );
-
-          const isActive =
-            frame >= stepStart && frame < stepStart + framesPerStep;
-          const isComplete = frame >= stepStart + framesPerStep * 0.6;
-
-          const pulse = isActive
+          const active =
+            frame >= start && (i === items.length - 1 || frame < start + per);
+          const reached = frame >= start;
+          const pulse = active
             ? spring({
-                frame: frame - stepStart,
+                frame: frame - start,
                 fps,
                 config: { damping: 8, stiffness: 150, mass: 0.4 },
               })
             : 1;
-
-          const circleScale = isActive ? 0.9 + pulse * 0.2 : isComplete ? 1.1 : 1;
-
-          const lineProgress =
-            i < steps.length - 1
-              ? interpolate(
-                  frame,
-                  [stepStart + framesPerStep * 0.5, stepStart + framesPerStep],
-                  [0, 1],
-                  { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-                )
-              : 0;
-
+          const scale = active ? 0.9 + pulse * 0.15 : 1;
+          const line = interpolate(
+            frame,
+            [start + per * 0.5, start + per],
+            [0, 1],
+            clamp,
+          );
           return (
-            <div
-              key={i}
-              style={{ display: "flex", alignItems: "center" }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  width: "80px",
-                }}
-              >
+            <div key={i}>
+              <div style={{ display: "flex", alignItems: "center", gap: 36 }}>
                 <div
                   style={{
-                    width: "48px",
-                    height: "48px",
+                    flexShrink: 0,
+                    width: dot,
+                    height: dot,
                     borderRadius: "50%",
-                    border: `3px solid ${fillProgress > 0 ? "#3b82f6" : "#4b5563"}`,
-                    background:
-                      fillProgress > 0
-                        ? `linear-gradient(135deg, #3b82f6, #7209b7)`
-                        : "transparent",
                     display: "flex",
-                    justifyContent: "center",
                     alignItems: "center",
-                    transform: `scale(${circleScale})`,
-                    transition: "border-color 0.1s",
+                    justifyContent: "center",
+                    fontSize: dot * 0.45,
+                    fontWeight: 900,
+                    color: reached ? colors.bgFrom : colors.muted,
+                    border: `5px solid ${reached ? accent : colors.surfaceAlt}`,
+                    background: reached
+                      ? `linear-gradient(135deg, ${accent}, ${colors.accent2})`
+                      : "rgba(17, 24, 39, 0.7)",
+                    transform: `scale(${scale})`,
+                    boxShadow: active ? `0 0 40px ${accent}88` : "none",
                   }}
                 >
-                  <span
-                    style={{
-                      color: fillProgress > 0 ? "white" : "#6b7280",
-                      fontSize: "1rem",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {i + 1}
-                  </span>
+                  {i + 1}
                 </div>
-                <span
-                  style={{
-                    color: fillProgress > 0 ? "#93c5fd" : "#6b7280",
-                    fontSize: "0.8rem",
-                    fontWeight: "500",
-                    marginTop: "10px",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {label}
-                </span>
-              </div>
-
-              {i < steps.length - 1 && (
                 <div
                   style={{
-                    width: "80px",
-                    height: "3px",
-                    background: "#374151",
-                    borderRadius: "2px",
-                    position: "relative",
+                    fontSize: items.length > 5 ? 48 : 58,
+                    fontWeight: active ? 900 : 700,
+                    color: reached ? colors.text : colors.muted,
+                    opacity: 0.55 + 0.45 * fill,
+                  }}
+                >
+                  <Emphasis text={label} color={accent} />
+                </div>
+              </div>
+              {i < items.length - 1 ? (
+                <div
+                  style={{
+                    width: 8,
+                    height: gapLine,
+                    marginLeft: dot / 2 - 4,
+                    borderRadius: 4,
+                    background: colors.surfaceAlt,
                     overflow: "hidden",
-                    marginBottom: "24px",
                   }}
                 >
                   <div
                     style={{
-                      width: `${lineProgress * 100}%`,
-                      height: "100%",
-                      background: "linear-gradient(90deg, #3b82f6, #a855f7)",
-                      borderRadius: "2px",
+                      width: "100%",
+                      height: `${line * 100}%`,
+                      background: `linear-gradient(180deg, ${accent}, ${colors.accent2})`,
                     }}
                   />
                 </div>
-              )}
+              ) : null}
             </div>
           );
         })}

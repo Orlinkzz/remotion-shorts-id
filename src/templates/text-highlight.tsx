@@ -1,35 +1,67 @@
-/** Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "text-highlight" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kalimat besar; kata ber-*aksen* disapu stabilo satu per satu sepanjang scene.
+// Props: title (kalimat; *kata* = disorot, tanpa * semua kata disorot), subtitle (opsional), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  fitFontSize,
+  plain,
+  sansFont,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Kode yang *mudah dibaca* lebih penting dari kode yang *pintar*",
+};
 
-import { useCurrentFrame, interpolate, useVideoConfig } from "remotion";
+// Pecah kalimat jadi kata, tandai yang ada di dalam *...*.
+const toWords = (text: string) => {
+  let on = false;
+  return text
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((raw) => {
+      const starts = raw.startsWith("*");
+      if (starts) on = true;
+      const marked = on;
+      if (raw.replace(/^\*/, "").includes("*")) on = false;
+      return { word: raw.replace(/\*/g, ""), marked };
+    });
+};
 
-export default function TextHighlight() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const words = ["Build", "amazing", "videos", "with", "code"];
-  const framesPerWord = Math.floor(fps * 0.6);
+export default function TextHighlight(props: TemplateProps) {
+  const { title, subtitle, accent, frame, fps, durationInFrames } = useTemplate(
+    props,
+    defaults,
+  );
+  const words = toWords(title);
+  const hasMarks = words.some((w) => w.marked);
+  const targets = words
+    .map((w, i) => ({ ...w, i }))
+    .filter((w) => (hasMarks ? w.marked : true))
+    .map((w) => w.i);
+  // Sorotan dimulai setelah 0,5 dtk dan selesai di ~60% scene.
+  const start = fps * 0.5;
+  const span = Math.max(fps * 0.4, durationInFrames * 0.6 - start);
+  const per = span / Math.max(1, targets.length);
+  const enter = spring({ frame, fps, config: { damping: 100 } });
+  const subIn = interpolate(frame, [fps * 0.6, fps * 1.1], [0, 1], clamp);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        background: "linear-gradient(180deg, #111827, #1f2937)",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
-        fontFamily: "Inter, sans-serif",
+        gap: 48,
+        fontFamily: sansFont,
+        opacity: enter,
+        transform: `translateY(${(1 - enter) * 30}px)`,
       }}
     >
       <div
@@ -37,53 +69,59 @@ export default function TextHighlight() {
           display: "flex",
           flexWrap: "wrap",
           justifyContent: "center",
-          alignItems: "center",
-          gap: "16px",
-          maxWidth: "700px",
-          padding: "40px",
+          gap: "8px 18px",
+          fontSize: fitFontSize(plain(title), 104, 64, 26),
+          fontWeight: 800,
+          lineHeight: 1.2,
+          color: colors.text,
         }}
       >
-        {words.map((word, i) => {
-          const wordStart = i * framesPerWord;
-          const highlightProgress = interpolate(
-            frame,
-            [wordStart, wordStart + framesPerWord * 0.5],
-            [0, 1],
-            { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-          );
-
-          const isHighlighted = highlightProgress > 0;
-
+        {words.map(({ word }, i) => {
+          const order = targets.indexOf(i);
+          const p =
+            order < 0
+              ? 0
+              : interpolate(
+                  frame,
+                  [
+                    start + order * per,
+                    start + order * per + Math.min(per, fps * 0.4),
+                  ],
+                  [0, 1],
+                  clamp,
+                );
           return (
-            <span
-              key={i}
-              style={{
-                position: "relative",
-                display: "inline-block",
-                fontSize: "3.5rem",
-                fontWeight: "bold",
-                color: "white",
-                padding: "4px 12px",
-              }}
-            >
+            <span key={i} style={{ position: "relative", padding: "0 10px" }}>
               <span
                 style={{
                   position: "absolute",
                   left: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: `${highlightProgress * 100}%`,
-                  background: "linear-gradient(135deg, #3b82f6, #7209b7)",
-                  borderRadius: "6px",
-                  zIndex: 0,
-                  opacity: isHighlighted ? 0.85 : 0,
+                  top: "8%",
+                  bottom: "8%",
+                  width: `${p * 100}%`,
+                  borderRadius: 10,
+                  background: `linear-gradient(135deg, ${accent}, ${colors.accent2})`,
+                  opacity: 0.85,
                 }}
               />
-              <span style={{ position: "relative", zIndex: 1 }}>{word}</span>
+              <span style={{ position: "relative" }}>{word}</span>
             </span>
           );
         })}
       </div>
+      {subtitle ? (
+        <div
+          style={{
+            fontSize: 46,
+            fontWeight: 600,
+            textAlign: "center",
+            color: colors.muted,
+            opacity: subIn,
+          }}
+        >
+          {subtitle}
+        </div>
+      ) : null}
     </div>
   );
 }

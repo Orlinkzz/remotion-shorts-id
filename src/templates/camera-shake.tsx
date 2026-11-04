@@ -1,77 +1,65 @@
-"use client";
+// Diadaptasi dari "camera-shake" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Guncangan kamera yang meredam, untuk momen "boom"/kejutan pada gambar atau judul.
+// Props: images[0] (opsional), title + subtitle (kartu judul / label di atas gambar), value (kekuatan px, default 24), accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  contentArea,
+  TemplateImage,
+  TemplateTitle,
+  TitleCard,
+  theme,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "*Error* di production!",
+  subtitle: "Padahal di lokal aman…",
+};
 
-export default function CameraShake() {
-  const frame = useCurrentFrame();
-  const { durationInFrames } = useVideoConfig();
-
-  // Amplitude decays from ~15px to 0 over the duration
-  const amplitude = interpolate(frame, [0, durationInFrames], [15, 0], {
-    extrapolateRight: "clamp",
-  });
-
-  // Organic shake using multiple sine/cosine frequencies
-  const shakeX = Math.sin(frame * 0.8) * amplitude;
-  const shakeY = Math.cos(frame * 1.1) * amplitude;
+export default function CameraShake(props: TemplateProps) {
+  const { title, subtitle, images, value, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  // Guncangan kuat di awal lalu reda dalam ~1,5 dtk.
+  const amp = interpolate(frame, [0, fps * 1.5], [value ?? 24, 0], clamp);
+  const x = (Math.sin(frame * 0.8) + Math.sin(frame * 2.3) * 0.5) * amp;
+  const y = (Math.cos(frame * 1.1) + Math.cos(frame * 1.9) * 0.5) * amp;
+  const rot = Math.sin(frame * 0.9) * amp * 0.05;
+  const image = images?.[0];
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {/* Content card that shakes */}
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
       <div
         style={{
-          transform: `translate(${shakeX}px, ${shakeY}px)`,
-          background: "linear-gradient(135deg, #1e293b, #0f172a)",
-          border: "1px solid rgba(59, 130, 246, 0.3)",
-          borderRadius: "16px",
-          padding: "2.5rem 3rem",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          boxShadow: "0 0 40px rgba(59, 130, 246, 0.15)",
+          position: "absolute",
+          inset: image ? -40 : 0,
+          transform: `translate(${x}px, ${y}px) rotate(${rot}deg)`,
         }}
       >
-        <h1
-          style={{
-            color: "white",
-            fontSize: "3.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            letterSpacing: "0.15em",
-          }}
-        >
-          IMPACT
-        </h1>
-        <div
-          style={{
-            width: "60px",
-            height: "3px",
-            background: "linear-gradient(90deg, #3b82f6, #a855f7)",
-            margin: "1rem 0",
-            borderRadius: "2px",
-          }}
-        />
-        <p
-          style={{
-            color: "#93c5fd",
-            fontSize: "1.1rem",
-            margin: 0,
-            textAlign: "center",
-          }}
-        >
-          Camera shake with decaying amplitude
-        </p>
+        {image ? (
+          <>
+            <TemplateImage src={image} />
+            <div
+              style={{
+                ...contentArea,
+                top: theme.layout.top + 40,
+                bottom: "auto",
+              }}
+            >
+              <TemplateTitle
+                text={title}
+                accent={accent}
+                max={92}
+                style={{ textShadow: "0 4px 24px rgba(0,0,0,0.8)" }}
+              />
+            </div>
+          </>
+        ) : (
+          <TitleCard title={title} subtitle={subtitle} accent={accent} />
+        )}
       </div>
     </div>
   );

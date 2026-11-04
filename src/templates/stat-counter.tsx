@@ -1,140 +1,102 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "stat-counter" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Angka besar yang menghitung naik, dengan label dan keterangan kecil.
+// Props: value (angka), unit (akhiran), title (label), subtitle (keterangan), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  fitFontSize,
+  formatNumber,
+  sansFont,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  value: 1247,
+  unit: "ms",
+  title: "Waktu muat *sebelum* dioptimasi",
+  subtitle: "↓ 85% setelah pakai cache",
+};
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-
-export default function StatCounter() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  // Spring entrance
-  const scaleSpring = spring({
-    frame,
-    fps,
-    config: { damping: 12, stiffness: 100 },
-  });
-
-  // Count up animation
-  const count = Math.round(
-    interpolate(frame, [10, 60], [0, 1247], {
-      extrapolateRight: "clamp",
-      extrapolateLeft: "clamp",
-    })
+export default function StatCounter(props: TemplateProps) {
+  const { value, unit, title, subtitle, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
   );
 
-  const subStatsOpacity = interpolate(frame, [40, 55], [0, 1], {
-    extrapolateRight: "clamp",
-    extrapolateLeft: "clamp",
+  const pop = spring({ frame, fps, config: { damping: 12, stiffness: 100 } });
+  const decimals = Number.isInteger(value) ? 0 : 1;
+  const count = interpolate(frame, [8, 8 + fps * 1.6], [0, value], {
+    ...clamp,
+    easing: (t) => 1 - (1 - t) ** 3,
   });
+  const label = formatNumber(count, decimals) + unit;
+  const subIn = interpolate(frame, [fps * 1.2, fps * 1.7], [0, 1], clamp);
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        height: "100%",
+        ...contentArea,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "Inter, system-ui, sans-serif",
-        background: "linear-gradient(to bottom right, #111827, #1f2937)",
+        fontFamily: sansFont,
       }}
     >
       <div
         style={{
-          position: "relative",
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          borderRadius: "16px",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-          padding: "60px 80px",
+          width: "100%",
+          padding: "80px 48px",
+          borderRadius: 40,
           textAlign: "center",
-          transform: `scale(${scaleSpring})`,
+          background: "rgba(17, 24, 39, 0.72)",
+          border: `2px solid ${colors.surfaceAlt}`,
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.35)",
+          transform: `scale(${pop})`,
         }}
       >
-        {/* Main number */}
         <div
           style={{
-            fontSize: "96px",
-            fontWeight: "bold",
-            color: "white",
-            textShadow: "0 4px 8px rgba(0,0,0,0.3)",
-            letterSpacing: "-2px",
-            lineHeight: "1",
+            fontSize: fitFontSize(
+              formatNumber(value, decimals) + unit,
+              220,
+              120,
+              6,
+            ),
+            fontWeight: 900,
+            lineHeight: 1,
+            letterSpacing: -4,
+            color: accent,
+            fontVariantNumeric: "tabular-nums",
           }}
         >
-          {count.toLocaleString()}
+          {label}
         </div>
-
-        {/* Label */}
         <div
           style={{
-            fontSize: "24px",
-            color: "rgba(255,255,255,0.7)",
-            marginTop: "12px",
-            fontWeight: "500",
-            letterSpacing: "1px",
+            marginTop: 28,
+            fontSize: 54,
+            fontWeight: 800,
+            lineHeight: 1.2,
+            color: colors.text,
           }}
         >
-          Total Users
+          <Emphasis text={title} color={accent} />
         </div>
-
-        {/* Sub stats */}
         <div
           style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: "30px",
-            marginTop: "30px",
-            opacity: subStatsOpacity,
+            marginTop: 32,
+            fontSize: 42,
+            fontWeight: 600,
+            color: colors.highlight,
+            opacity: subIn,
+            transform: `translateY(${(1 - subIn) * 20}px)`,
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <span
-              style={{
-                color: "#22c55e",
-                fontSize: "18px",
-                fontWeight: "600",
-              }}
-            >
-              ↑ 12.5%
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-            }}
-          >
-            <span
-              style={{
-                color: "rgba(255,255,255,0.5)",
-                fontSize: "18px",
-                fontWeight: "400",
-              }}
-            >
-              This Month
-            </span>
-          </div>
+          {subtitle}
         </div>
       </div>
     </div>

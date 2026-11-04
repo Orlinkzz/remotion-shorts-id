@@ -1,69 +1,58 @@
-"use client";
+// Diadaptasi dari "bokeh-circles" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Lingkaran bokeh lembut melayang di belakang judul.
+// Props: title, subtitle, accent.
+import {
+  palette,
+  TitleCard,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Fokus ke *satu hal*",
+  subtitle: "Sisanya biar jadi latar",
+};
 
-export default function BokehCircles() {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+const COUNT = 22;
 
-  const t = frame / fps;
-
-  const circles = Array.from({ length: 15 }, (_, i) => {
-    // Fixed positions spread across the canvas
-    const baseX = ((i * 173 + 53) % 100) / 100;
-    const baseY = ((i * 241 + 97) % 100) / 100;
-
-    // Slow drift using sin waves at different phases
-    const driftX = Math.sin(t * 0.2 + i * 1.3) * 30;
-    const driftY = Math.cos(t * 0.15 + i * 0.9) * 25;
-
-    const x = baseX * width + driftX;
-    const y = baseY * height + driftY;
-
-    // Pulsing size
-    const baseSize = 40 + ((i * 37 + 11) % 80); // 40-120px
-    const pulse = Math.sin(t * 0.4 + i * 0.7) * 0.2 + 1;
-    const size = baseSize * pulse;
-
-    // Varying opacity between 0.1-0.3
-    const opacity = 0.1 + ((i * 19 + 7) % 20) / 100;
-
-    // Color selection: soft blues, purples, teals
-    const colorOptions = [
-      [59, 130, 246],  // blue
-      [139, 92, 246],  // purple
-      [20, 184, 166],  // teal
-    ];
-    const rgb = colorOptions[i % 3];
-
-    return { x, y, size, opacity, rgb, key: i };
-  });
+export default function BokehCircles(props: TemplateProps) {
+  const { title, subtitle, accent, frame, durationInFrames, width, height } =
+    useTemplate(props, defaults);
+  const colorsList = palette(accent).slice(0, 3);
+  // Satu putaran penuh sepanjang scene supaya geraknya mulus.
+  const t = (frame / durationInFrames) * Math.PI * 2;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {circles.map((circle) => (
-        <div
-          key={circle.key}
-          style={{
-            position: "absolute",
-            left: circle.x,
-            top: circle.y,
-            width: circle.size,
-            height: circle.size,
-            borderRadius: "50%",
-            background: `radial-gradient(circle, rgba(${circle.rgb[0]}, ${circle.rgb[1]}, ${circle.rgb[2]}, ${circle.opacity + 0.1}) 0%, rgba(${circle.rgb[0]}, ${circle.rgb[1]}, ${circle.rgb[2]}, 0) 100%)`,
-            transform: "translate(-50%, -50%)",
-          }}
-        />
-      ))}
-    </div>
+    <>
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+        {Array.from({ length: COUNT }).map((_, i) => {
+          const baseX = ((i * 173 + 53) % 100) / 100;
+          const baseY = ((i * 241 + 97) % 100) / 100;
+          const x = baseX * width + Math.sin(t + i * 1.3) * 60;
+          const y = baseY * height + Math.cos(t + i * 0.9) * 80;
+          const size =
+            (120 + ((i * 37 + 11) % 200)) *
+            (1 + 0.2 * Math.sin(t * 2 + i * 0.7));
+          const opacity = 0.25 + ((i * 19 + 7) % 25) / 100;
+          return (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                left: x,
+                top: y,
+                width: size,
+                height: size,
+                borderRadius: "50%",
+                transform: "translate(-50%, -50%)",
+                opacity,
+                background: `radial-gradient(circle, ${colorsList[i % 3]} 0%, transparent 70%)`,
+              }}
+            />
+          );
+        })}
+      </div>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+    </>
   );
 }

@@ -1,88 +1,135 @@
-"use client";
+// Diadaptasi dari "logo-blur-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Logo muncul dari blur menjadi tajam, lalu nama brand dan tagline naik masuk.
+// Props: title (nama brand), subtitle (tagline), images[0] (opsional, gambar logo), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+const defaults = {
+  title: "Senimankode",
+  subtitle: "Belajar coding, satu menit sehari",
+};
 
-export default function LogoBlurReveal() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const initials = (name: string) =>
+  plain(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("") || "?";
 
-  // Blur animates from 20 to 0
-  const blur = interpolate(frame, [0, fps * 1.5], [20, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+const LogoMark: React.FC<{
+  title: string;
+  image?: string;
+  accent: string;
+  size?: number;
+}> = ({ title, image, accent, size = 320 }) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size * 0.22,
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: image
+        ? "transparent"
+        : `linear-gradient(135deg, ${accent}, ${colors.accent2})`,
+      boxShadow: image ? undefined : `0 20px 60px ${accent}55`,
+    }}
+  >
+    {image ? (
+      <TemplateImage src={image} style={{ objectFit: "contain" }} />
+    ) : (
+      <span
+        style={{
+          fontSize: size * 0.42,
+          fontWeight: 900,
+          color: "white",
+          letterSpacing: -4,
+        }}
+      >
+        {initials(title)}
+      </span>
+    )}
+  </div>
+);
 
-  // Opacity from 0.3 to 1
-  const opacity = interpolate(frame, [0, fps * 1.5], [0.3, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  // Company name appears after logo is sharp
-  const nameProgress = spring({
-    frame: Math.max(0, frame - Math.round(fps * 1.5)),
+export default function LogoBlurReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const blur = interpolate(frame, [0, fps * 1.2], [30, 0], clamp);
+  const opacity = interpolate(frame, [0, fps * 1.2], [0.2, 1], clamp);
+  const scale = interpolate(frame, [0, fps * 1.2], [1.15, 1], clamp);
+  const name = spring({
+    frame: frame - Math.round(fps * 1),
     fps,
     config: { damping: 12, stiffness: 100 },
   });
-  const nameOpacity = interpolate(nameProgress, [0, 1], [0, 1]);
-  const nameTranslateY = interpolate(nameProgress, [0, 1], [20, 0]);
+  const tag = spring({
+    frame: frame - Math.round(fps * 1.3),
+    fps,
+    config: { damping: 14 },
+  });
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
       <div
         style={{
           filter: `blur(${blur}px)`,
           opacity,
+          transform: `scale(${scale})`,
         }}
       >
-        <div
-          style={{
-            width: "100px",
-            height: "100px",
-            borderRadius: "20px",
-            background: "linear-gradient(135deg, #4361ee, #7209b7)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.4rem",
-              fontWeight: "bold",
-              fontFamily: "Inter, sans-serif",
-              letterSpacing: "0.1em",
-            }}
-          >
-            LOGO
-          </span>
-        </div>
+        <LogoMark title={title} image={images?.[0]} accent={accent} />
       </div>
-      <p
+      <div
         style={{
-          color: "white",
-          fontSize: "1.8rem",
-          fontWeight: "bold",
-          fontFamily: "Inter, sans-serif",
-          marginTop: "1.5rem",
-          opacity: nameOpacity,
-          transform: `translateY(${nameTranslateY}px)`,
+          marginTop: 56,
+          fontSize: fitFontSize(plain(title), 120, 64, 11),
+          fontWeight: 900,
+          color: colors.text,
+          letterSpacing: -2,
+          opacity: name,
+          transform: `translateY(${(1 - name) * 30}px)`,
         }}
       >
-        Company Name
-      </p>
+        {plain(title)}
+      </div>
+      <div
+        style={{
+          marginTop: 20,
+          fontSize: 46,
+          fontWeight: 600,
+          color: colors.muted,
+          opacity: tag,
+          transform: `translateY(${(1 - tag) * 20}px)`,
+        }}
+      >
+        {subtitle}
+      </div>
     </div>
   );
 }

@@ -66,7 +66,15 @@ Semua scene: "type", "narration" (wajib), "speech" (opsional).
 2. code:   "language", "filename" (opsional), "code", "highlightLines" (opsional)
 3. points: "title" (opsional, boleh *kata*), "items" (1-6 butir, ideal 3, <= 40 karakter, boleh *kata*)
 4. outro:  "cta" (<= 40 karakter, tanpa *). Jangan isi "handle".
-5. template: "template". Jangan dipakai kecuali saya minta.
+5. template: "template" + "props" (field HANYA title, subtitle, text, items, values, value, unit).
+   Maksimal 2 per video, hanya salah satu dari:
+   - stat-counter: value, unit, title (label), subtitle
+   - comparison-chart: title, items (2 label), values (2 angka), unit
+   - chart-animation: title, items (label), values, unit
+   - circular-progress: value (0-100), title, subtitle
+   - card-flip: title (istilah), text (artinya)
+   - chapter-title: value (nomor bagian), title, subtitle
+   - clock-wipe: items (1 teks masalah), title + subtitle (solusinya)
 
 ATURAN SCENE code
 - "language" salah satu: javascript, typescript, tsx, jsx, php, python, go, rust, kotlin, swift,

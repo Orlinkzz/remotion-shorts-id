@@ -1,69 +1,72 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "floating-bubble-text" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kartu judul melayang naik-turun dengan bingkai gradien yang berputar.
+// Props: title (judul, *kata* = aksen), subtitle (opsional), accent.
+import { spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Tips *Git*",
+  subtitle: "Commit kecil, sering, dan jelas",
+};
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
-
-export default function FloatingBubbleText() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
+export default function FloatingBubbleText(props: TemplateProps) {
+  const { title, subtitle, accent, frame, fps } = useTemplate(props, defaults);
   const float = Math.sin(frame / 30) * 20;
-  const scale = spring({
-    frame,
-    fps,
-    from: 0,
-    to: 1,
-    config: {
-      damping: 12,
-      mass: 0.5,
-    },
-  });
+  const scale = spring({ frame, fps, config: { damping: 12, mass: 0.5 } });
+  // Bingkai berputar penuh tiap 3 dtk (pengganti animasi CSS asli).
+  const angle = (frame / (fps * 3)) * 360;
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: `translate(-50%, -50%) translateY(${float}px) scale(${scale})`,
+        ...contentArea,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: sansFont,
       }}
     >
       <div
         style={{
-          fontSize: "4.5rem",
-          fontWeight: "bold",
-          color: "white",
-          padding: "2rem 3.5rem",
-          borderRadius: "24px",
-          background: "linear-gradient(45deg, #1e3a8a, #3b82f6)",
-          border: "3px solid transparent",
-          backgroundClip: "padding-box",
-          position: "relative",
-          overflow: "hidden",
-          boxShadow: "0 8px 32px rgba(30, 58, 138, 0.2)",
+          width: "100%",
+          padding: 6,
+          borderRadius: 44,
+          background: `conic-gradient(from ${angle}deg, ${accent}, ${colors.accent2}, #F472B6, ${accent})`,
+          boxShadow: "0 16px 48px rgba(0,0,0,0.35)",
+          transform: `translateY(${float}px) scale(${scale})`,
         }}
       >
         <div
           style={{
-            position: "absolute",
-            inset: "-3px",
-            background: "linear-gradient(45deg, cyan, magenta)",
-            zIndex: -1,
-            margin: "-2px",
-            animation: `rotate 3s linear infinite`,
+            borderRadius: 38,
+            padding: "72px 56px",
+            textAlign: "center",
+            background:
+              "linear-gradient(45deg, rgba(30,58,138,0.95), rgba(17,24,39,0.95))",
           }}
-        />
-        Floating
+        >
+          <TemplateTitle text={title} accent={accent} max={124} />
+          {subtitle ? (
+            <div
+              style={{
+                marginTop: 28,
+                fontSize: 46,
+                fontWeight: 600,
+                lineHeight: 1.3,
+                color: colors.muted,
+              }}
+            >
+              {subtitle}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

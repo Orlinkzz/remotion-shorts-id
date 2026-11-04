@@ -1,126 +1,54 @@
-"use client";
+// Diadaptasi dari "blinds-transition" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B seperti tirai jendela yang menutup bilah demi bilah.
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+const defaults = {
+  items: ["Sebelum refactor"],
+  title: "*Sesudah* refactor",
+  subtitle: "Lebih rapi, lebih mudah dibaca",
+};
 
-export default function BlindsTransition() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const BLINDS = 8;
 
-  const blindCount = 8;
-  const blinds = Array.from({ length: blindCount });
+export default function BlindsTransition(props: TemplateProps) {
+  const { items, title, subtitle, accent } = useTemplate(props, defaults);
+  const p = useTransitionProgress();
+  const slot = 100 / BLINDS;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-      }}
-    >
-      {/* Scene B (underneath) - Purple */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "linear-gradient(135deg, #3b1f5e, #111827)",
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #a855f7, #7209b7)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Scene B
-        </h2>
-        <p style={{ color: "#c084fc", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Behind the blinds
-        </p>
-      </div>
-
-      {/* Blinds containing Scene A */}
-      {blinds.map((_, i) => {
-        const delay = i * 3;
-        const rotation = interpolate(frame, [fps * 0.5 + delay, fps * 1.5 + delay], [0, 90], {
-          extrapolateLeft: "clamp",
-          extrapolateRight: "clamp",
-        });
-
-        return (
-          <div
-            key={i}
-            style={{
-              position: "absolute",
-              top: `${(i / blindCount) * 100}%`,
-              left: 0,
-              width: "100%",
-              height: `${100 / blindCount}%`,
-              overflow: "hidden",
-              transformOrigin: "center top",
-              transform: `perspective(800px) rotateX(${rotation}deg)`,
-              backfaceVisibility: "hidden",
-            }}
-          >
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: `${blindCount * 100}%`,
-                marginTop: `${-i * 100}%`,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                background: "linear-gradient(135deg, #1e3a5f, #111827)",
-              }}
-            >
-              <div
-                style={{
-                  width: "80px",
-                  height: "80px",
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-                  marginBottom: "1rem",
-                }}
+    <>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+      {p < 1
+        ? Array.from({ length: BLINDS }).map((_, i) => {
+            // Bilah kiri menutup lebih dulu.
+            const local = interpolate(
+              p,
+              [i * 0.06, i * 0.06 + 0.58],
+              [0, 1],
+              clamp,
+            );
+            const left = i * slot;
+            const right = 100 - (i + 1) * slot + local * slot;
+            return (
+              <TitleCard
+                key={i}
+                title={items[0]}
+                accent={accent}
+                background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
+                style={{ clipPath: `inset(0 ${right}% 0 ${left}%)` }}
               />
-              <h2
-                style={{
-                  color: "white",
-                  fontSize: "2.5rem",
-                  fontWeight: "bold",
-                  margin: 0,
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                Scene A
-              </h2>
-              <p style={{ color: "#93c5fd", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-                Blinds opening...
-              </p>
-            </div>
-          </div>
-        );
-      })}
-    </div>
+            );
+          })
+        : null}
+    </>
   );
 }

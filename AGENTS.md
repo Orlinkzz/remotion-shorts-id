@@ -31,13 +31,15 @@ tidak perlu server MCP khusus.
 ## Tipe scene
 `hook` (text, subtext?), `code` (language, filename?, code, highlightLines?),
 `points` (title?, items 1-6), `outro` (cta, handle?), `template` (template = salah satu nama di
-`src/templates/names.ts`, tampil apa adanya dengan teks bawaan RVE).
+`src/templates/names.ts`, props? = title/subtitle/text/items/values/value/unit/images/accent; per template dan artinya di `docs/templates.md`).
 `*kata*` di `text`/`title`/`items` memberi warna aksen. Baris kode <= 38 karakter.
 Naskah campuran Indonesia + Inggris; tulis istilah teknis dengan ejaan aslinya (Laravel, PostgreSQL).
 
 ## Aturan
-- Jangan mengedit `src/templates/*` kecuali diminta (salinan template RVE, tiga di antaranya sudah
-  diadaptasi: ken-burns, parallax-pan, zoom-pulse). `names.ts` dan `registry.ts` dibuat otomatis.
+- Template (`src/templates/*`) semuanya menerima `TemplateProps` dan memakai `src/lib/template-kit.tsx`
+  (warna/font theme, `contentArea`, `TemplateImage`, `useTransitionProgress`). Animasi hanya dari frame,
+  tanpa CSS animation, `Math.random` (pakai `random(seed)`), atau URL gambar eksternal.
+  `names.ts`, `registry.ts`, dan `src/compositions/TemplateGallery.tsx` dibuat otomatis (`npm run gen:templates`). Template baru: lihat CONTRIBUTING.md.
 - Gaya visual diatur di `src/theme.ts`; background di `src/compositions/notebook-paper.element.tsx`
   (prop `bg`). Jangan menyebar warna/ukuran ke tiap scene.
 - Scene baru: tambahkan skema di `src/lib/schema.ts`, komponen di `src/scenes/`, case di

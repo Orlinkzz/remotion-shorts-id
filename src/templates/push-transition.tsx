@@ -1,109 +1,40 @@
-"use client";
+// Diadaptasi dari "push-transition" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B: B mendorong A keluar ke atas (cocok untuk layar vertikal).
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import {
+  colors,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, spring } from "remotion";
+const defaults = {
+  items: ["Langkah 1: install"],
+  title: "Langkah 2: *konfigurasi*",
+  subtitle: "Atur file .env dulu",
+};
 
-export default function PushTransition() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const pushProgress = spring({
-    frame: frame - fps * 0.8,
-    fps,
-    config: {
-      damping: 15,
-      stiffness: 80,
-      mass: 0.8,
-    },
-  });
-
-  const translateA = -pushProgress * 100;
-  const translateB = (1 - pushProgress) * 100;
+export default function PushTransition(props: TemplateProps) {
+  const { items, title, subtitle, accent } = useTemplate(props, defaults);
+  const p = useTransitionProgress();
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-      }}
-    >
-      {/* Scene A - Blue */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "linear-gradient(135deg, #1e3a5f, #111827)",
-          transform: `translateX(${translateA}%)`,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            marginBottom: "1rem",
-          }}
+    <>
+      <TitleCard
+        title={title}
+        subtitle={subtitle}
+        accent={accent}
+        style={{ transform: `translateY(${(1 - p) * 100}%)` }}
+      />
+      {p < 1 ? (
+        <TitleCard
+          title={items[0]}
+          accent={accent}
+          background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
+          style={{ transform: `translateY(${-p * 100}%)` }}
         />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Scene A
-        </h2>
-        <p style={{ color: "#93c5fd", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Being pushed out...
-        </p>
-      </div>
-
-      {/* Scene B - Purple */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          background: "linear-gradient(135deg, #3b1f5e, #111827)",
-          transform: `translateX(${translateB}%)`,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #a855f7, #7209b7)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Scene B
-        </h2>
-        <p style={{ color: "#c084fc", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Pushing in...
-        </p>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }

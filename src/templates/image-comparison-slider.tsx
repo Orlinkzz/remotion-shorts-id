@@ -1,94 +1,120 @@
-"use client";
+// Diadaptasi dari "image-comparison-slider" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Perbandingan sebelum/sesudah: garis pembatas menyapu gambar lalu berhenti di tengah.
+// Props: images[0] (sebelum), images[1] (sesudah), items[0..1] (label), title (opsional), accent.
+import { Easing, interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  sansFont,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, useVideoConfig } from "remotion";
+const defaults = {
+  items: ["Sebelum", "Sesudah"],
+};
 
-export default function ImageComparisonSlider() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const Label: React.FC<{
+  text: string;
+  side: "left" | "right";
+  color: string;
+}> = ({ text, side, color }) => (
+  <div
+    style={{
+      position: "absolute",
+      top: 28,
+      [side]: 28,
+      padding: "12px 26px",
+      borderRadius: 999,
+      background: "rgba(0,0,0,0.6)",
+      border: `2px solid ${color}`,
+      color: colors.text,
+      fontSize: 40,
+      fontWeight: 800,
+    }}
+  >
+    {text}
+  </div>
+);
 
-  const duration = fps * 3;
-  const dividerPercent = interpolate(frame, [10, duration], [5, 95], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+export default function ImageComparisonSlider(props: TemplateProps) {
+  const { title, items, images, accent, frame, fps, durationInFrames } =
+    useTemplate(props, defaults);
+
+  const d = durationInFrames;
+  const divider = interpolate(
+    frame,
+    [d * 0.1, d * 0.45, d * 0.7],
+    [96, 4, 50],
+    { ...clamp, easing: Easing.inOut(Easing.cubic) },
+  );
+  const enter = spring({ frame, fps, config: { damping: 14 } });
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        overflow: "hidden",
+        flexDirection: "column",
+        gap: 40,
+        fontFamily: sansFont,
       }}
     >
+      {title ? (
+        <TemplateTitle
+          text={title}
+          accent={accent}
+          max={80}
+          style={{ textAlign: "center" }}
+        />
+      ) : null}
       <div
         style={{
-          width: "85%",
-          height: "75%",
-          borderRadius: "12px",
-          overflow: "hidden",
           position: "relative",
+          flex: 1,
+          borderRadius: 36,
+          overflow: "hidden",
+          border: `2px solid ${colors.surfaceAlt}`,
+          boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+          opacity: enter,
+          transform: `scale(${0.92 + 0.08 * enter})`,
         }}
       >
-        {/* After (full background) */}
+        <div style={{ position: "absolute", inset: 0 }}>
+          <TemplateImage src={images?.[1]} index={1} label={items[1] ?? ""} />
+        </div>
         <div
           style={{
             position: "absolute",
             inset: 0,
-            background: "linear-gradient(135deg, #4361ee, #7209b7, #a855f7)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
+            clipPath: `inset(0 ${100 - divider}% 0 0)`,
           }}
         >
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.5rem",
-              fontWeight: 600,
-              fontFamily: "Inter, sans-serif",
-              opacity: 0.8,
-            }}
-          >
-            After
-          </span>
+          <TemplateImage
+            src={images?.[0]}
+            index={3}
+            label={items[0] ?? ""}
+            style={images?.[0] ? undefined : { filter: "grayscale(0.8)" }}
+          />
         </div>
-        {/* Before (clipped) */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            clipPath: `inset(0 ${100 - dividerPercent}% 0 0)`,
-            background: "linear-gradient(135deg, #1e293b, #374151, #4b5563)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <span
-            style={{
-              color: "#9ca3af",
-              fontSize: "1.5rem",
-              fontWeight: 600,
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            Before
-          </span>
-        </div>
-        {/* Divider */}
+        {items[0] ? (
+          <Label text={items[0]} side="left" color={colors.muted} />
+        ) : null}
+        {items[1] ? (
+          <Label text={items[1]} side="right" color={accent} />
+        ) : null}
         <div
           style={{
             position: "absolute",
             top: 0,
             bottom: 0,
-            left: `${dividerPercent}%`,
-            width: "3px",
-            backgroundColor: "white",
-            zIndex: 2,
+            left: `${divider}%`,
+            width: 6,
+            marginLeft: -3,
+            background: colors.text,
           }}
         >
           <div
@@ -96,12 +122,13 @@ export default function ImageComparisonSlider() {
               position: "absolute",
               top: "50%",
               left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "28px",
-              height: "28px",
+              width: 72,
+              height: 72,
+              marginLeft: -36,
+              marginTop: -36,
               borderRadius: "50%",
-              backgroundColor: "white",
-              border: "3px solid #3b82f6",
+              background: colors.text,
+              border: `6px solid ${accent}`,
             }}
           />
         </div>

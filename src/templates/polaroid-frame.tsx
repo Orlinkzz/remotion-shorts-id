@@ -1,67 +1,64 @@
-"use client";
+// Diadaptasi dari "polaroid-frame" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Foto polaroid jatuh dari atas, berayun, lalu diam dengan tulisan tangan di bawahnya.
+// Props: images[0], title (tulisan di bingkai; items[0] dipakai kalau diisi).
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  contentArea,
+  plain,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Commit pertama ✨",
+};
 
-export default function PolaroidFrame() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const dropIn = spring({
-    frame,
-    fps,
-    config: { damping: 10, stiffness: 80 },
-  });
-
-  const translateY = interpolate(dropIn, [0, 1], [-300, 0]);
-  const rotation = interpolate(dropIn, [0, 1], [8, -3]);
-  const opacity = interpolate(dropIn, [0, 0.3], [0, 1], {
-    extrapolateRight: "clamp",
-  });
+export default function PolaroidFrame(props: TemplateProps) {
+  const { title, items, images, frame, fps } = useTemplate(props, defaults);
+  const caption = plain(items?.[0] ?? title);
+  const drop = spring({ frame, fps, config: { damping: 10, stiffness: 80 } });
+  const opacity = interpolate(drop, [0, 0.3], [0, 1], clamp);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
       }}
     >
       <div
         style={{
-          backgroundColor: "white",
-          padding: "12px 12px 48px 12px",
-          borderRadius: "4px",
-          transform: `translateY(${translateY}px) rotate(${rotation}deg)`,
+          width: 820,
+          padding: "32px 32px 0",
+          background: "#ffffff",
+          borderRadius: 8,
+          boxShadow: "0 30px 80px rgba(0,0,0,0.5)",
           opacity,
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)",
+          transform: `translateY(${(1 - drop) * -700}px) rotate(${interpolate(drop, [0, 1], [10, -3])}deg)`,
         }}
       >
         <div
+          style={{ width: "100%", aspectRatio: "1 / 1", overflow: "hidden" }}
+        >
+          <TemplateImage src={images?.[0]} label="" />
+        </div>
+        <div
           style={{
-            width: "260px",
-            height: "260px",
-            background: "linear-gradient(135deg, #4361ee, #7209b7)",
-            borderRadius: "2px",
-          }}
-        />
-        <p
-          style={{
+            padding: "36px 0 44px",
             textAlign: "center",
             color: "#374151",
-            fontSize: "0.95rem",
-            fontWeight: 500,
-            margin: 0,
-            marginTop: "12px",
             fontFamily: "Georgia, serif",
             fontStyle: "italic",
+            fontSize: 56,
+            lineHeight: 1.2,
           }}
         >
-          Summer 2024
-        </p>
+          {caption}
+        </div>
       </div>
     </div>
   );

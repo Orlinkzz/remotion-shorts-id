@@ -1,202 +1,173 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "line-chart" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Garis tren yang tergambar dari kiri ke kanan, titik data muncul saat dilewati.
+// Props: title, subtitle, items (label sumbu X), values (data), unit, accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  formatNumber,
+  sansFont,
+  series,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Waktu *build* makin cepat",
+  subtitle: "Detik per build, tiap versi",
+  items: ["v1", "v2", "v3", "v4", "v5"],
+  values: [48, 41, 30, 22, 9],
+  unit: "s",
+};
 
-import { interpolate, useCurrentFrame } from "remotion";
+const W = 952;
+const H = 760;
+const PAD_X = 70;
+const PAD_TOP = 80;
+const PAD_BOTTOM = 90;
 
-export default function LineChart() {
-  const frame = useCurrentFrame();
+export default function LineChart(props: TemplateProps) {
+  const {
+    title,
+    subtitle,
+    items,
+    values,
+    unit,
+    accent,
+    frame,
+    fps,
+    durationInFrames,
+  } = useTemplate(props, defaults);
+  const data = series(items, values);
+  const max = Math.max(1, ...data.map((d) => d.value));
+  const x = (i: number) =>
+    data.length === 1
+      ? W / 2
+      : PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2);
+  const y = (v: number) =>
+    H - PAD_BOTTOM - (v / max) * (H - PAD_TOP - PAD_BOTTOM);
 
-  const data = [
-    { x: 0, y: 25, label: "Jan" },
-    { x: 1, y: 40, label: "Feb" },
-    { x: 2, y: 35, label: "Mar" },
-    { x: 3, y: 55, label: "Apr" },
-    { x: 4, y: 50, label: "May" },
-    { x: 5, y: 70, label: "Jun" },
-    { x: 6, y: 65, label: "Jul" },
-    { x: 7, y: 80, label: "Aug" },
-    { x: 8, y: 75, label: "Sep" },
-    { x: 9, y: 90, label: "Oct" },
-  ];
-
-  const chartWidth = 900;
-  const chartHeight = 500;
-  const padding = 70;
-
-  const xScale = (x: number) =>
-    (x / (data.length - 1)) * (chartWidth - padding * 2) + padding;
-  const yScale = (y: number) =>
-    chartHeight - padding - (y / 100) * (chartHeight - padding * 2);
-
-  // Build polyline points
-  const points = data.map((d) => `${xScale(d.x)},${yScale(d.y)}`).join(" ");
-
-  // Calculate total polyline length (approximate)
-  let totalLength = 0;
-  for (let i = 1; i < data.length; i++) {
-    const dx = xScale(data[i].x) - xScale(data[i - 1].x);
-    const dy = yScale(data[i].y) - yScale(data[i - 1].y);
-    totalLength += Math.sqrt(dx * dx + dy * dy);
-  }
-
-  // Animate line drawing
-  const dashOffset = interpolate(frame, [0, 60], [totalLength, 0], {
-    extrapolateRight: "clamp",
+  const seg = data
+    .slice(1)
+    .map((d, i) => Math.hypot(x(i + 1) - x(i), y(d.value) - y(data[i].value)));
+  const total = seg.reduce((s, l) => s + l, 0);
+  const drawEnd = Math.max(
+    fps * 0.8,
+    Math.min(fps * 2, durationInFrames * 0.6),
+  );
+  const draw = interpolate(frame, [6, drawEnd], [0, 1], {
+    ...clamp,
+    easing: (t) => 1 - (1 - t) ** 2,
   });
+  const drawn = total * draw;
+  const reachedAt = (i: number) => seg.slice(0, i).reduce((s, l) => s + l, 0);
+  const titleIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        height: "100%",
+        ...contentArea,
         display: "flex",
-        alignItems: "center",
+        flexDirection: "column",
         justifyContent: "center",
-        fontFamily: "Inter, system-ui, sans-serif",
-        background: "linear-gradient(to bottom right, #111827, #1f2937)",
+        gap: 40,
+        fontFamily: sansFont,
       }}
     >
-      <div
-        style={{
-          position: "relative",
-          width: `${chartWidth}px`,
-          height: `${chartHeight}px`,
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          borderRadius: "16px",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-          overflow: "hidden",
-          padding: "20px",
-        }}
-      >
-        <svg width={chartWidth} height={chartHeight}>
-          {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map((val) => (
-            <line
-              key={`grid-${val}`}
-              x1={padding}
-              y1={yScale(val)}
-              x2={chartWidth - padding}
-              y2={yScale(val)}
-              stroke="rgba(255,255,255,0.1)"
-              strokeWidth="1"
-            />
-          ))}
-
-          {/* Y-axis labels */}
-          {[0, 25, 50, 75, 100].map((val) => (
-            <text
-              key={`y-${val}`}
-              x={padding - 15}
-              y={yScale(val) + 5}
-              textAnchor="end"
-              fill="rgba(255,255,255,0.6)"
-              fontSize="12"
-            >
-              {val}
-            </text>
-          ))}
-
-          {/* X-axis line */}
-          <line
-            x1={padding}
-            y1={chartHeight - padding}
-            x2={chartWidth - padding}
-            y2={chartHeight - padding}
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="2"
-          />
-
-          {/* Y-axis line */}
-          <line
-            x1={padding}
-            y1={padding}
-            x2={padding}
-            y2={chartHeight - padding}
-            stroke="rgba(255,255,255,0.2)"
-            strokeWidth="2"
-          />
-
-          {/* X-axis labels */}
-          {data.map((point, i) => (
-            <text
-              key={`x-label-${i}`}
-              x={xScale(point.x)}
-              y={chartHeight - padding + 25}
-              textAnchor="middle"
-              fill="rgba(255,255,255,0.8)"
-              fontSize="13"
-              fontWeight="500"
-            >
-              {point.label}
-            </text>
-          ))}
-
-          {/* Animated polyline */}
-          <polyline
-            points={points}
-            fill="none"
-            stroke="#4361ee"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray={totalLength}
-            strokeDashoffset={dashOffset}
-          />
-
-          {/* Data points */}
-          {data.map((point, i) => {
-            const pointProgress = interpolate(
-              frame,
-              [5 + i * 6, 10 + i * 6],
-              [0, 1],
-              { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
-            );
-
-            return (
-              <circle
-                key={`point-${i}`}
-                cx={xScale(point.x)}
-                cy={yScale(point.y)}
-                r={5 * pointProgress}
-                fill="#f72585"
-                stroke="white"
-                strokeWidth="2"
-                opacity={pointProgress}
-              />
-            );
-          })}
-        </svg>
-
-        {/* Chart title */}
+      <div style={{ opacity: titleIn }}>
+        <TemplateTitle text={title} accent={accent} max={88} />
         <div
           style={{
-            position: "absolute",
-            top: "25px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            fontSize: "28px",
-            fontWeight: "bold",
-            color: "white",
-            textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-            letterSpacing: "-0.5px",
+            marginTop: 16,
+            fontSize: 42,
+            fontWeight: 600,
+            color: colors.muted,
           }}
         >
-          Revenue Growth
+          <Emphasis text={subtitle} color={accent} />
         </div>
+      </div>
+      <div
+        style={{
+          borderRadius: 36,
+          background: "rgba(17, 24, 39, 0.68)",
+          border: `2px solid ${colors.surfaceAlt}`,
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.35)",
+        }}
+      >
+        <svg
+          width="100%"
+          viewBox={`0 0 ${W} ${H}`}
+          style={{ display: "block" }}
+        >
+          {[0, 0.25, 0.5, 0.75, 1].map((t) => (
+            <line
+              key={t}
+              x1={PAD_X}
+              x2={W - PAD_X}
+              y1={y(max * t)}
+              y2={y(max * t)}
+              stroke="rgba(255,255,255,0.1)"
+              strokeWidth={2}
+            />
+          ))}
+          <polyline
+            points={data.map((d, i) => `${x(i)},${y(d.value)}`).join(" ")}
+            fill="none"
+            stroke={accent}
+            strokeWidth={9}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray={total}
+            strokeDashoffset={total - drawn}
+          />
+          {data.map((d, i) => {
+            const at = reachedAt(i);
+            const shown =
+              total === 0
+                ? draw
+                : interpolate(drawn, [at - 1, at + 30], [0, 1], clamp);
+            return (
+              <g key={i} opacity={shown}>
+                <circle
+                  cx={x(i)}
+                  cy={y(d.value)}
+                  r={14 * shown}
+                  fill={colors.surface}
+                  stroke={accent}
+                  strokeWidth={6}
+                />
+                <text
+                  x={x(i)}
+                  y={y(d.value) - 30}
+                  textAnchor="middle"
+                  fill={colors.text}
+                  fontSize={38}
+                  fontWeight={800}
+                >
+                  {formatNumber(d.value, Number.isInteger(d.value) ? 0 : 1) +
+                    unit}
+                </text>
+              </g>
+            );
+          })}
+          {data.map((d, i) => (
+            <text
+              key={`label-${i}`}
+              x={x(i)}
+              y={H - 30}
+              textAnchor="middle"
+              fill={colors.muted}
+              fontSize={34}
+              fontWeight={600}
+            >
+              {d.label}
+            </text>
+          ))}
+        </svg>
       </div>
     </div>
   );

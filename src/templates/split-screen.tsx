@@ -1,130 +1,149 @@
-"use client";
+// Diadaptasi dari "split-screen" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Dua panel (atas/bawah di 9:16) yang meluncur masuk untuk membandingkan dua hal.
+// Props: title (opsional, judul di atas), items[0..1] (label panel), images[0..1] (opsional, foto panel), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "*Tabs* atau *spaces*?",
+  items: ["Tabs", "Spaces"],
+};
 
-export default function SplitScreen() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  // Left panel slides in from left
-  const leftSlide = spring({
-    frame,
+export default function SplitScreen(props: TemplateProps) {
+  const { title, items, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const panels = [items[0], items[1] ?? ""];
+  const gradients = [
+    `linear-gradient(135deg, ${accent}, #1d4ed8)`,
+    `linear-gradient(135deg, ${colors.accent2}, #5b21b6)`,
+  ];
+  const titleIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
+  const badge = spring({
+    frame: frame - Math.round(fps * 0.6),
     fps,
-    config: { damping: 15, stiffness: 80 },
-  });
-
-  // Right panel slides in from right with slight delay
-  const rightSlide = spring({
-    frame: frame - 5,
-    fps,
-    config: { damping: 15, stiffness: 80 },
-  });
-
-  const leftTranslateX = interpolate(leftSlide, [0, 1], [-100, 0]);
-  const rightTranslateX = interpolate(rightSlide, [0, 1], [100, 0]);
-
-  // Divider fades in after panels meet
-  const dividerOpacity = interpolate(frame, [fps * 0.6, fps * 0.9], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
+    config: { damping: 10 },
   });
 
   return (
     <div
       style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
+        gap: 36,
+        fontFamily: sansFont,
       }}
     >
-      {/* Left panel */}
+      {title ? (
+        <div style={{ opacity: titleIn, textAlign: "center" }}>
+          <TemplateTitle text={title} accent={accent} max={92} />
+        </div>
+      ) : null}
       <div
         style={{
-          width: "50%",
-          height: "100%",
-          transform: `translateX(${leftTranslateX}%)`,
-          background: "linear-gradient(135deg, #1e3a5f, #1d4ed8)",
+          position: "relative",
+          flex: 1,
           display: "flex",
           flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "2rem",
+          gap: 24,
         }}
       >
-        <h2
+        {panels.map((label, i) => {
+          const slide = spring({
+            frame: frame - i * 5,
+            fps,
+            config: { damping: 15, stiffness: 80 },
+          });
+          const dir = i === 0 ? -1 : 1;
+          return (
+            <div
+              key={i}
+              style={{
+                position: "relative",
+                flex: 1,
+                borderRadius: 40,
+                overflow: "hidden",
+                transform: `translateX(${dir * (1 - slide) * 110}%)`,
+                boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+              }}
+            >
+              {images?.[i] ? (
+                <TemplateImage src={images[i]} />
+              ) : (
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: gradients[i],
+                  }}
+                />
+              )}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  alignItems: images?.[i] ? "flex-end" : "center",
+                  justifyContent: "center",
+                  padding: 40,
+                  background: images?.[i]
+                    ? "linear-gradient(180deg, rgba(0,0,0,0) 50%, rgba(0,0,0,0.7) 100%)"
+                    : undefined,
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: fitFontSize(plain(label), 120, 56, 10),
+                    fontWeight: 900,
+                    color: "white",
+                    textAlign: "center",
+                    textShadow: "0 4px 20px rgba(0,0,0,0.4)",
+                  }}
+                >
+                  <Emphasis text={label} color={colors.highlight} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        <div
           style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
+            position: "absolute",
+            left: "50%",
+            top: "50%",
+            width: 150,
+            height: 150,
+            marginLeft: -75,
+            marginTop: -75,
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 60,
+            fontWeight: 900,
+            color: colors.bgFrom,
+            background: colors.text,
+            border: `6px solid ${colors.bgFrom}`,
+            transform: `scale(${badge})`,
           }}
         >
-          Panel A
-        </h2>
-        <p
-          style={{
-            color: "#bfdbfe",
-            fontSize: "1rem",
-            marginTop: "0.75rem",
-            textAlign: "center",
-          }}
-        >
-          Left side content slides in from the left edge
-        </p>
+          VS
+        </div>
       </div>
-
-      {/* Right panel */}
-      <div
-        style={{
-          width: "50%",
-          height: "100%",
-          transform: `translateX(${rightTranslateX}%)`,
-          background: "linear-gradient(135deg, #5b21b6, #7c3aed)",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          padding: "2rem",
-        }}
-      >
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-          }}
-        >
-          Panel B
-        </h2>
-        <p
-          style={{
-            color: "#ddd6fe",
-            fontSize: "1rem",
-            marginTop: "0.75rem",
-            textAlign: "center",
-          }}
-        >
-          Right side content slides in from the right edge
-        </p>
-      </div>
-
-      {/* Center divider */}
-      <div
-        style={{
-          position: "absolute",
-          top: "10%",
-          bottom: "10%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "2px",
-          background: "linear-gradient(180deg, transparent, rgba(255,255,255,0.8), transparent)",
-          opacity: dividerOpacity,
-        }}
-      />
     </div>
   );
 }

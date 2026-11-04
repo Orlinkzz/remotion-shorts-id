@@ -1,113 +1,49 @@
-"use client";
+// Diadaptasi dari "zoom-through" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B: kamera menembus A (zoom besar) lalu B mendarat.
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+const defaults = {
+  items: ["Di balik layar"],
+  title: "Cara kerja *event loop*",
+  subtitle: "Call stack, queue, dan tick",
+};
 
-export default function ZoomThrough() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const midPoint = fps * 1.25;
-  const totalFrames = fps * 2.5;
-
-  // Scene A: scale 1→3, opacity 1→0
-  const scaleA = interpolate(frame, [0, midPoint], [1, 3], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
+export default function ZoomThrough(props: TemplateProps) {
+  const { items, title, subtitle, accent } = useTemplate(props, defaults);
+  const p = useTransitionProgress((t) => t);
+  const scaleA = interpolate(p, [0, 0.5], [1, 3], clamp);
+  const opacityA = interpolate(p, [0.2, 0.5], [1, 0], clamp);
+  const scaleB = interpolate(p, [0.5, 1], [0.4, 1], {
+    ...clamp,
+    easing: (t) => 1 - (1 - t) ** 3,
   });
-  const opacityA = interpolate(frame, [0, midPoint], [1, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  // Scene B: scale 3→1, opacity 0→1
-  const scaleB = interpolate(frame, [midPoint, totalFrames], [3, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-  const opacityB = interpolate(frame, [midPoint, totalFrames], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const opacityB = interpolate(p, [0.45, 0.75], [0, 1], clamp);
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-      }}
-    >
-      {/* Scene A */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: opacityA,
-          transform: `scale(${scaleA})`,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            marginBottom: "1rem",
-          }}
+    <>
+      <TitleCard
+        title={title}
+        subtitle={subtitle}
+        accent={accent}
+        style={{ opacity: opacityB, transform: `scale(${scaleB})` }}
+      />
+      {opacityA > 0 ? (
+        <TitleCard
+          title={items[0]}
+          accent={accent}
+          background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
+          style={{ opacity: opacityA, transform: `scale(${scaleA})` }}
         />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Zooming In...
-        </h2>
-      </div>
-
-      {/* Scene B */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: opacityB,
-          transform: `scale(${scaleB})`,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #a855f7, #7209b7)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Arriving...
-        </h2>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }

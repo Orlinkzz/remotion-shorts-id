@@ -1,84 +1,117 @@
-"use client";
+// Diadaptasi dari "image-carousel" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Carousel horizontal: kartu gambar bergeser satu per satu sepanjang scene.
+// Props: images (1-8 gambar), items (keterangan per gambar), title (opsional), accent.
+import { Easing, interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  sansFont,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, useVideoConfig } from "remotion";
+const defaults = {
+  items: ["Desain", "Kode", "Uji", "Rilis"],
+};
 
-export default function ImageCarousel() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const CARD_W = 620;
+const CARD_H = 820;
 
-  const slides = [
-    { label: "Mountain", gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-    { label: "Ocean", gradient: "linear-gradient(135deg, #4361ee, #7209b7)" },
-    { label: "Forest", gradient: "linear-gradient(135deg, #a855f7, #7c3aed)" },
-  ];
+export default function ImageCarousel(props: TemplateProps) {
+  const { title, items, images, accent, frame, fps, durationInFrames } =
+    useTemplate(props, defaults);
+  const count = images?.length ?? items.length;
 
-  const cycleLength = fps * 2;
-  const progress = (frame % (cycleLength * slides.length)) / cycleLength;
+  // Tiap gambar dapat jatah waktu sama; geser di 20% akhir jatahnya.
+  const segment = durationInFrames / count;
+  const t = frame / segment;
+  const idx = Math.min(count - 1, Math.floor(t));
+  const slide =
+    idx >= count - 1
+      ? 0
+      : interpolate(t - idx, [0.8, 1], [0, 1], {
+          ...clamp,
+          easing: Easing.inOut(Easing.cubic),
+        });
+  const pos = idx + slide;
+  const enter = spring({ frame, fps, config: { damping: 14 } });
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        gap: 40,
+        fontFamily: sansFont,
       }}
     >
+      {title ? (
+        <TemplateTitle
+          text={title}
+          accent={accent}
+          max={80}
+          style={{ textAlign: "center" }}
+        />
+      ) : null}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1.5rem",
           position: "relative",
+          width: "100%",
+          height: CARD_H,
+          opacity: enter,
+          transform: `translateY(${(1 - enter) * 60}px)`,
         }}
       >
-        {slides.map((slide, i) => {
-          const offset = i - progress;
-          const translateX = offset * 280;
-          const scale = interpolate(
-            Math.abs(offset),
-            [0, 1, 2],
-            [1, 0.75, 0.55],
-            { extrapolateRight: "clamp" }
-          );
-          const opacity = interpolate(
-            Math.abs(offset),
-            [0, 1, 2],
-            [1, 0.5, 0.2],
-            { extrapolateRight: "clamp" }
-          );
-
+        {Array.from({ length: count }, (_, i) => {
+          const offset = i - pos;
+          const dist = Math.abs(offset);
+          const scale = interpolate(dist, [0, 1, 2], [1, 0.78, 0.6], clamp);
+          const opacity = interpolate(dist, [0, 1, 2], [1, 0.45, 0], clamp);
           return (
             <div
               key={i}
               style={{
                 position: "absolute",
-                width: "240px",
-                height: "320px",
-                background: slide.gradient,
-                borderRadius: "12px",
-                transform: `translateX(${translateX}px) scale(${scale})`,
+                left: "50%",
+                top: 0,
+                width: CARD_W,
+                height: CARD_H,
+                marginLeft: -CARD_W / 2,
+                borderRadius: 36,
+                overflow: "hidden",
+                border: `3px solid ${dist < 0.5 ? accent : colors.surfaceAlt}`,
+                boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+                transform: `translateX(${offset * 560}px) scale(${scale})`,
                 opacity,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "flex-end",
-                padding: "1rem",
+                zIndex: 10 - Math.round(dist),
               }}
             >
-              <span
-                style={{
-                  color: "white",
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  fontFamily: "Inter, sans-serif",
-                  textShadow: "0 1px 4px rgba(0,0,0,0.3)",
-                }}
-              >
-                {slide.label}
-              </span>
+              <TemplateImage src={images?.[i]} index={i} />
+              {items[i] ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    padding: "80px 32px 32px",
+                    background:
+                      "linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.8))",
+                    color: colors.text,
+                    fontSize: 52,
+                    fontWeight: 800,
+                    textAlign: "center",
+                  }}
+                >
+                  {items[i]}
+                </div>
+              ) : null}
             </div>
           );
         })}

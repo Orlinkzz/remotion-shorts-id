@@ -1,61 +1,74 @@
-"use client";
-// Diadaptasi dari RVE Remotion Templates (MIT, https://www.reactvideoeditor.com):
-// next/image -> <Img> Remotion, animasi CSS -> interpolasi berbasis frame.
-import React from "react";
-import { Easing, Img, useCurrentFrame, useVideoConfig } from "remotion";
+// Diadaptasi dari "parallax-pan" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Foto layar penuh bergeser pelan dari kiri ke kanan; judul melayang lebih lambat (paralaks).
+// Props: images[0], title (opsional), subtitle (opsional), accent.
+import { Easing, interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-interface ParallaxPanProps {
-  imageUrl?: string;
-  duration?: number;
-  direction?: "left-right" | "right-left" | "top-bottom" | "bottom-top";
-  scale?: number;
-}
-
-export const ParallaxPan: React.FC<ParallaxPanProps> = ({
-  imageUrl = "https://images.pexels.com/photos/1644724/pexels-photo-1644724.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2",
-  duration = 15,
-  direction = "left-right",
-  scale = 1.2,
-}) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  // Bolak-balik (alternate) dengan ease-out, seperti animasi CSS aslinya.
-  const phase = (frame / (duration * fps)) % 2;
-  const t = phase <= 1 ? phase : 2 - phase;
-  const eased = Easing.out(Easing.ease)(t);
-
-  const horizontal = direction === "left-right" || direction === "right-left";
-  const forward = direction === "left-right" || direction === "top-bottom";
-  const from = forward ? 0 : -20;
-  const to = forward ? -20 : 0;
-  const offset = from + (to - from) * eased;
-  const translate = horizontal
-    ? `translateX(${offset}%)`
-    : `translateY(${offset}%)`;
+export default function ParallaxPan(props: TemplateProps) {
+  const { images, title, subtitle, accent, progress, frame, fps } = useTemplate(
+    props,
+    {},
+  );
+  const p = Easing.inOut(Easing.ease)(progress);
+  const titleIn = interpolate(frame, [fps * 0.3, fps * 0.9], [0, 1], clamp);
 
   return (
-    <div
-      style={{
-        flex: 1,
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "black",
-        overflow: "hidden",
-      }}
-    >
-      <Img
-        src={imageUrl}
+    <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+      <div
         style={{
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          transform: `${translate} scale(${scale})`,
+          position: "absolute",
+          top: 0,
+          bottom: 0,
+          left: 0,
+          width: "130%",
+          transform: `translateX(${-23 * p}%)`,
         }}
-      />
+      >
+        <TemplateImage src={images?.[0]} label="" />
+      </div>
+      {title ? (
+        <>
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 65%, rgba(0,0,0,0.55) 100%)",
+            }}
+          />
+          <div
+            style={{
+              ...contentArea,
+              bottom: "auto",
+              opacity: titleIn,
+              transform: `translateX(${(1 - p) * 40 - 20}px)`,
+            }}
+          >
+            <TemplateTitle text={title} accent={accent} max={92} />
+            {subtitle ? (
+              <div
+                style={{
+                  marginTop: 20,
+                  fontSize: 46,
+                  fontWeight: 600,
+                  color: colors.text,
+                  opacity: 0.85,
+                }}
+              >
+                {subtitle}
+              </div>
+            ) : null}
+          </div>
+        </>
+      ) : null}
     </div>
   );
-};
-
-export default ParallaxPan;
+}

@@ -1,72 +1,92 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "bubble-pop-text" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Tiap huruf judul muncul sebagai gelembung bulat yang meletup satu per satu.
+// Props: title (kata pendek, maks ~8 huruf per baris), subtitle (opsional), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  plain,
+  sansFont,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "DEBUG",
+  subtitle: "Cari bug-nya, bukan kambing hitamnya",
+};
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
-
-export default function BubblePopText() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const text = "HELLO";
+export default function BubblePopText(props: TemplateProps) {
+  const { title, subtitle, accent, frame, fps } = useTemplate(props, defaults);
+  const words = plain(title).split(/\s+/).filter(Boolean);
+  const longest = Math.max(1, ...words.map((w) => w.length));
+  // Lebar area aman 952px; gelembung + jarak harus muat satu kata per baris.
+  const size = Math.max(72, Math.min(150, Math.floor(920 / longest) - 14));
+  const total = words.reduce((n, w) => n + w.length, 0);
+  const step = Math.min(5, (fps * 1.2) / Math.max(1, total));
+  const subIn = interpolate(frame, [fps * 1.2, fps * 1.7], [0, 1], clamp);
+  let index = 0;
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        ...contentArea,
         display: "flex",
-        gap: "0.5rem",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        gap: 24,
+        fontFamily: sansFont,
       }}
     >
-      {text.split("").map((char, i) => {
-        const delay = i * 5;
-        const scale = spring({
-          frame: frame - delay,
-          fps,
-          from: 0,
-          to: 1,
-          config: {
-            damping: 8,
-            mass: 0.3,
-            stiffness: 100,
-          },
-        });
-
-        return (
-          <span
-            key={i}
-            style={{
-              display: "inline-block",
-              transform: `scale(${scale})`,
-              fontSize: "4rem",
-              fontWeight: "bold",
-              color: "white",
-              border: "4px solid rgba(255, 255, 255, 0.2)",
-              borderRadius: "50%",
-              width: "100px",
-              height: "100px",
-              lineHeight: "92px",
-              textAlign: "center",
-              background: "linear-gradient(45deg, #1e3a8a, #3b82f6)",
-              boxShadow: "0 4px 15px rgba(59, 130, 246, 0.5)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            {char}
-          </span>
-        );
-      })}
+      {words.map((word, w) => (
+        <div key={w} style={{ display: "flex", gap: 14 }}>
+          {[...word].map((ch) => {
+            const scale = spring({
+              frame: frame - index++ * step,
+              fps,
+              config: { damping: 8, mass: 0.3, stiffness: 100 },
+            });
+            return (
+              <div
+                key={index}
+                style={{
+                  width: size,
+                  height: size,
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: size * 0.55,
+                  fontWeight: 900,
+                  color: colors.text,
+                  border: "4px solid rgba(255,255,255,0.2)",
+                  background: `linear-gradient(45deg, #1e3a8a, ${accent})`,
+                  boxShadow: `0 6px 20px color-mix(in srgb, ${accent} 50%, transparent)`,
+                  transform: `scale(${scale})`,
+                }}
+              >
+                {ch}
+              </div>
+            );
+          })}
+        </div>
+      ))}
+      {subtitle ? (
+        <div
+          style={{
+            marginTop: 24,
+            textAlign: "center",
+            fontSize: 46,
+            fontWeight: 600,
+            color: colors.muted,
+            opacity: subIn,
+          }}
+        >
+          {subtitle}
+        </div>
+      ) : null}
     </div>
   );
 }

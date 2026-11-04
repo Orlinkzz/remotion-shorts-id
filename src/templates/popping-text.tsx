@@ -1,90 +1,89 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "popping-text" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kata seru besar yang hurufnya meletup bergantian warna, cocok untuk "BERHASIL!".
+// Props: title (kata pendek), subtitle (opsional), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  palette,
+  plain,
+  sansFont,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "BERHASIL!",
+  subtitle: "Semua test lulus",
+};
 
-import { spring, useCurrentFrame, useVideoConfig, interpolate } from "remotion";
-
-export default function PoppingText() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const text = "BINGO!".split("");
-
-  const colors = [
-    "#1e3a8a", // teal/aqua blue
-    "#3b82f6", // dark blue-green
-    "#A9D6E5", // light blue
-  ];
+export default function PoppingText(props: TemplateProps) {
+  const { title, subtitle, accent, frame, fps } = useTemplate(props, defaults);
+  const words = plain(title).split(/\s+/).filter(Boolean);
+  const longest = Math.max(1, ...words.map((w) => w.length));
+  const fontSize = Math.max(80, Math.min(200, Math.floor(1500 / longest)));
+  const total = words.reduce((n, w) => n + w.length, 0);
+  const step = Math.min(7, (fps * 1.2) / Math.max(1, total));
+  const tones = palette(accent).slice(0, 3);
+  const subIn = interpolate(frame, [fps * 1.2, fps * 1.7], [0, 1], clamp);
+  let index = 0;
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        textAlign: "center",
-        height: "100%",
+        ...contentArea,
         display: "flex",
-        alignItems: "center",
+        flexDirection: "column",
         justifyContent: "center",
+        alignItems: "center",
+        gap: 8,
+        fontFamily: sansFont,
       }}
     >
-      {text.map((char, i) => {
-        const delay = i * 7;
-        const colorIndex = i % colors.length;
-
-        // Simple scale and opacity animation
-        const scale = spring({
-          frame: frame - delay,
-          fps,
-          from: 0,
-          to: 1,
-          config: { mass: 0.4, damping: 8, stiffness: 100 },
-        });
-
-        const opacity = spring({
-          frame: frame - delay,
-          fps,
-          from: 0,
-          to: 1,
-          config: { mass: 0.3, damping: 8, stiffness: 100 },
-        });
-
-        return (
-          <span
-            key={i}
-            style={{
-              display: "inline-block",
-              opacity,
-              color: colors[colorIndex],
-              fontSize: "8rem",
-              fontWeight: "900",
-              margin: "0 0.1em",
-              textShadow: `0 0 10px ${colors[colorIndex]}80,
-                          -2px -2px 0 #fff, 
-                          2px -2px 0 #fff, 
-                          -2px 2px 0 #fff, 
-                          2px 2px 0 #fff`,
-              transform: `scale(${scale})`,
-              fontFamily: "'Impact', 'Arial Black', sans-serif",
-              letterSpacing: "0.05em",
-            }}
-          >
-            {char === " " ? "\u00A0" : char}
-          </span>
-        );
-      })}
+      {words.map((word, w) => (
+        <div key={w} style={{ whiteSpace: "nowrap" }}>
+          {[...word].map((ch) => {
+            const i = index++;
+            const scale = spring({
+              frame: frame - i * step,
+              fps,
+              config: { mass: 0.4, damping: 8, stiffness: 100 },
+            });
+            const tone = tones[i % tones.length];
+            return (
+              <span
+                key={i}
+                style={{
+                  display: "inline-block",
+                  margin: "0 0.04em",
+                  fontSize,
+                  fontWeight: 900,
+                  color: tone,
+                  opacity: Math.min(1, scale),
+                  transform: `scale(${scale})`,
+                  textShadow: `0 0 16px ${tone}, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 3px 3px 0 #fff`,
+                }}
+              >
+                {ch}
+              </span>
+            );
+          })}
+        </div>
+      ))}
+      {subtitle ? (
+        <div
+          style={{
+            marginTop: 40,
+            fontSize: 50,
+            fontWeight: 700,
+            color: colors.text,
+            opacity: subIn,
+          }}
+        >
+          {subtitle}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,142 +1,143 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "circular-progress" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Cincin progres yang terisi sampai persen tertentu, dengan cincin putar halus.
+// Props: value (persen 0–100), unit (default "%"), title (label di bawah), subtitle (keterangan), accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  formatNumber,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  value: 92,
+  unit: "%",
+  title: "*Test coverage*",
+  subtitle: "Target minimal 80%",
+};
 
-import { interpolate, useCurrentFrame, useVideoConfig } from "remotion";
+const SIZE = 680;
+const R = 280;
+const STROKE = 44;
 
-export default function CircularProgress() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  // Calculate progress based on frame
-  const progress = interpolate(frame % 90, [0, 90], [0, 100], {
-    extrapolateRight: "clamp",
+export default function CircularProgress(props: TemplateProps) {
+  const { value, unit, title, subtitle, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const target = Math.max(0, Math.min(100, value));
+  const fill = interpolate(frame, [6, fps * 1.8], [0, 1], {
+    ...clamp,
+    easing: (t) => 1 - (1 - t) ** 3,
   });
-
-  // Calculate rotation for the loading effect
-  const rotation = (frame * 4) % 360;
-
-  // Calculate radius and circumference
-  const radius = 80;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progress / 100) * circumference;
-
-  // Pulse effect
-  const pulse = 1 + Math.sin(frame / 10) * 0.05;
+  const circumference = 2 * Math.PI * R;
+  const rotation = (frame * 1.5) % 360;
+  const pulse = 1 + Math.sin(frame / 12) * 0.015;
+  const subIn = interpolate(frame, [fps * 1.2, fps * 1.7], [0, 1], clamp);
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        height: "100%",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
+        gap: 56,
+        fontFamily: sansFont,
+        textAlign: "center",
       }}
     >
       <div
         style={{
           position: "relative",
-          width: "300px",
-          height: "300px",
+          width: SIZE,
+          height: SIZE,
           transform: `scale(${pulse})`,
         }}
       >
-        {/* Background circle */}
         <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 200 200"
-          style={{
-            position: "absolute",
-            transform: "rotate(-90deg)",
-          }}
+          width={SIZE}
+          height={SIZE}
+          style={{ position: "absolute", inset: 0 }}
         >
-          <circle
-            cx="100"
-            cy="100"
-            r={radius}
-            fill="none"
-            stroke="rgba(255, 255, 255, 0.1)"
-            strokeWidth="12"
-          />
-        </svg>
-
-        {/* Progress circle */}
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 200 200"
-          style={{
-            position: "absolute",
-            transform: "rotate(-90deg)",
-          }}
-        >
-          <circle
-            cx="100"
-            cy="100"
-            r={radius}
-            fill="none"
-            stroke="url(#progressGradient)"
-            strokeWidth="12"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-          />
-
           <defs>
             <linearGradient
-              id="progressGradient"
-              x1="0%"
-              y1="0%"
-              x2="100%"
-              y2="0%"
+              id="circular-progress-grad"
+              x1="0"
+              y1="0"
+              x2="1"
+              y2="1"
             >
-              <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#1e3a8a" />
+              <stop offset="0%" stopColor={accent} />
+              <stop offset="100%" stopColor={colors.accent2} />
             </linearGradient>
           </defs>
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={R}
+            fill="rgba(17, 24, 39, 0.6)"
+            stroke="rgba(255,255,255,0.08)"
+            strokeWidth={STROKE}
+          />
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={R}
+            fill="none"
+            stroke="url(#circular-progress-grad)"
+            strokeWidth={STROKE}
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={circumference * (1 - (target / 100) * fill)}
+            transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
+          />
+          <circle
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={R - STROKE - 14}
+            fill="none"
+            stroke={accent}
+            strokeOpacity={0.35}
+            strokeWidth={6}
+            strokeDasharray="40 30"
+            transform={`rotate(${rotation} ${SIZE / 2} ${SIZE / 2})`}
+          />
         </svg>
-
-        {/* Rotating dots */}
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 200 200"
-          style={{
-            position: "absolute",
-            transform: `rotate(${rotation}deg)`,
-          }}
-        >
-          <circle cx="100" cy="20" r="8" fill="#3b82f6" />
-        </svg>
-
-        {/* Percentage text */}
         <div
           style={{
             position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            fontSize: "3rem",
-            fontWeight: "bold",
-            color: "white",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 160,
+            fontWeight: 900,
+            color: colors.text,
+            fontVariantNumeric: "tabular-nums",
           }}
         >
-          {Math.round(progress)}%
+          {formatNumber(target * fill, Number.isInteger(target) ? 0 : 1) + unit}
+        </div>
+      </div>
+      <div>
+        <TemplateTitle text={title} accent={accent} max={84} />
+        <div
+          style={{
+            marginTop: 20,
+            fontSize: 44,
+            fontWeight: 600,
+            color: colors.muted,
+            opacity: subIn,
+          }}
+        >
+          <Emphasis text={subtitle} color={accent} />
         </div>
       </div>
     </div>

@@ -1,204 +1,168 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "logo-glitch-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Logo muncul dari glitch kanal RGB yang mereda, lalu bersinar bersih dengan nama brand.
+// Props: title (nama brand), subtitle (tagline), images[0] (opsional, gambar logo), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Senimankode",
+  subtitle: "Belajar coding, satu menit sehari",
+};
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+const SIZE = 320;
 
-export default function LogoGlitchReveal() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const initials = (name: string) =>
+  plain(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("") || "?";
 
-  // Decay factor: starts at 1 and goes to 0 over time
-  const decay = interpolate(frame, [0, 30], [1, 0], {
-    extrapolateRight: "clamp",
-  });
+const LogoMark: React.FC<{
+  title: string;
+  image?: string;
+  background: string;
+  color?: string;
+}> = ({ title, image, background, color = "white" }) => (
+  <div
+    style={{
+      position: "absolute",
+      inset: 0,
+      borderRadius: SIZE * 0.22,
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: image ? "transparent" : background,
+    }}
+  >
+    {image ? (
+      <TemplateImage src={image} style={{ objectFit: "contain" }} />
+    ) : (
+      <span
+        style={{
+          fontSize: SIZE * 0.42,
+          fontWeight: 900,
+          color,
+          letterSpacing: -4,
+        }}
+      >
+        {initials(title)}
+      </span>
+    )}
+  </div>
+);
 
-  // Pseudo-random offsets using sin for deterministic rendering
-  const redOffsetX = Math.sin(frame * 7.3) * 15 * decay;
-  const redOffsetY = Math.sin(frame * 5.1) * 10 * decay;
-  const greenOffsetX = Math.sin(frame * 11.7) * 15 * decay;
-  const greenOffsetY = Math.sin(frame * 3.9) * 10 * decay;
-  const blueOffsetX = Math.sin(frame * 9.2) * 15 * decay;
-  const blueOffsetY = Math.sin(frame * 6.4) * 10 * decay;
+const CHANNELS = [
+  { color: "rgba(239, 68, 68, 0.6)", fx: 7.3, fy: 5.1 },
+  { color: "rgba(34, 197, 94, 0.6)", fx: 11.7, fy: 3.9 },
+  { color: "rgba(59, 130, 246, 0.6)", fx: 9.2, fy: 6.4 },
+];
 
-  // Clean logo appears after glitch settles
-  const cleanOpacity = spring({
-    frame: Math.max(0, frame - 25),
+export default function LogoGlitchReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const image = images?.[0];
+  const decay = interpolate(frame, [0, fps], [1, 0], clamp);
+  const channelOpacity = interpolate(
+    frame,
+    [fps * 0.65, fps * 1.15],
+    [0.8, 0],
+    clamp,
+  );
+  const clean = spring({
+    frame: Math.max(0, frame - Math.round(fps * 0.8)),
     fps,
     config: { damping: 14, stiffness: 80, mass: 0.6 },
   });
-
-  // Glow intensity increases as glitch settles
-  const glowIntensity = interpolate(frame, [20, 40], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  // Channel separation opacity fades out as clean logo appears
-  const channelOpacity = interpolate(frame, [20, 35], [0.7, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const logoStyle: React.CSSProperties = {
-    width: "120px",
-    height: "120px",
-    borderRadius: "24px",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "absolute",
-  };
+  const glow = interpolate(frame, [fps * 0.7, fps * 1.3], [0, 1], clamp);
+  const nameShift = Math.sin(frame * 13.1) * 24 * decay;
+  const nameIn = interpolate(frame, [fps * 0.2, fps * 0.6], [0, 1], clamp);
 
   return (
     <div
       style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
-      {/* RGB Channel Copies */}
-      <div
-        style={{
-          position: "relative",
-          width: "120px",
-          height: "120px",
-        }}
-      >
-        {/* Red channel */}
-        <div
-          style={{
-            ...logoStyle,
-            background: "rgba(239, 68, 68, 0.6)",
-            transform: `translate(${redOffsetX}px, ${redOffsetY}px)`,
-            opacity: channelOpacity,
-            mixBlendMode: "screen",
-          }}
-        >
-          <span
+      <div style={{ position: "relative", width: SIZE, height: SIZE }}>
+        {CHANNELS.map((c, i) => (
+          <div
+            key={i}
             style={{
-              color: "rgba(255, 255, 255, 0.8)",
-              fontSize: "1.8rem",
-              fontWeight: "800",
-              letterSpacing: "0.1em",
-              fontFamily: "Inter, sans-serif",
+              position: "absolute",
+              inset: 0,
+              opacity: channelOpacity,
+              mixBlendMode: "screen",
+              transform: `translate(${Math.sin(frame * c.fx) * 40 * decay}px, ${Math.sin(frame * c.fy) * 26 * decay}px)`,
             }}
           >
-            LOGO
-          </span>
-        </div>
-
-        {/* Green channel */}
+            <LogoMark title={title} image={image} background={c.color} />
+          </div>
+        ))}
         <div
           style={{
-            ...logoStyle,
-            background: "rgba(34, 197, 94, 0.6)",
-            transform: `translate(${greenOffsetX}px, ${greenOffsetY}px)`,
-            opacity: channelOpacity,
-            mixBlendMode: "screen",
+            position: "absolute",
+            inset: 0,
+            opacity: clean,
+            borderRadius: SIZE * 0.22,
+            boxShadow: `0 0 ${80 * glow}px ${accent}aa`,
           }}
         >
-          <span
-            style={{
-              color: "rgba(255, 255, 255, 0.8)",
-              fontSize: "1.8rem",
-              fontWeight: "800",
-              letterSpacing: "0.1em",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            LOGO
-          </span>
-        </div>
-
-        {/* Blue channel */}
-        <div
-          style={{
-            ...logoStyle,
-            background: "rgba(59, 130, 246, 0.6)",
-            transform: `translate(${blueOffsetX}px, ${blueOffsetY}px)`,
-            opacity: channelOpacity,
-            mixBlendMode: "screen",
-          }}
-        >
-          <span
-            style={{
-              color: "rgba(255, 255, 255, 0.8)",
-              fontSize: "1.8rem",
-              fontWeight: "800",
-              letterSpacing: "0.1em",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            LOGO
-          </span>
-        </div>
-
-        {/* Clean logo */}
-        <div
-          style={{
-            ...logoStyle,
-            background: "linear-gradient(135deg, #4361ee, #7209b7)",
-            opacity: cleanOpacity,
-            boxShadow: `0 0 ${40 * glowIntensity}px rgba(67, 97, 238, ${0.5 * glowIntensity})`,
-          }}
-        >
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.8rem",
-              fontWeight: "800",
-              letterSpacing: "0.1em",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            LOGO
-          </span>
+          <LogoMark
+            title={title}
+            image={image}
+            background={`linear-gradient(135deg, ${accent}, ${colors.accent2})`}
+          />
         </div>
       </div>
-
-      {/* Company Name */}
-      <h2
+      <div
         style={{
-          color: "white",
-          fontSize: "2rem",
-          fontWeight: "700",
-          marginTop: "1.5rem",
-          marginBottom: 0,
-          fontFamily: "Inter, sans-serif",
-          letterSpacing: "0.05em",
-          opacity: cleanOpacity,
+          marginTop: 64,
+          fontSize: fitFontSize(plain(title), 120, 64, 11),
+          fontWeight: 900,
+          color: colors.text,
+          letterSpacing: -2,
+          opacity: nameIn,
+          transform: `translateX(${nameShift}px)`,
+          textShadow:
+            decay > 0.05
+              ? `${-6 * decay}px 0 rgba(239,68,68,0.8), ${6 * decay}px 0 rgba(59,130,246,0.8)`
+              : "none",
         }}
       >
-        Company Name
-      </h2>
-      <p
+        {plain(title)}
+      </div>
+      <div
         style={{
-          color: "#93c5fd",
-          fontSize: "1rem",
-          marginTop: "0.5rem",
-          fontFamily: "Inter, sans-serif",
-          opacity: cleanOpacity,
+          marginTop: 20,
+          fontSize: 46,
+          fontWeight: 600,
+          color: colors.muted,
+          opacity: clean,
         }}
       >
-        Your tagline here
-      </p>
+        {subtitle}
+      </div>
     </div>
   );
 }

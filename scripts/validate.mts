@@ -50,26 +50,58 @@ for (const id of ids) {
     (n, s) => n + s.narration.split(/\s+/).filter(Boolean).length,
     0,
   );
-  console.log(`  OK ${video.scenes.length} scene, ${words} kata (~${Math.round(words / WORDS_PER_SECOND)} dtk)`);
+  console.log(
+    `  OK ${video.scenes.length} scene, ${words} kata (~${Math.round(words / WORDS_PER_SECOND)} dtk)`,
+  );
 
   video.scenes.forEach((scene, i) => {
+    if (scene.type === "template") {
+      for (const img of scene.props?.images ?? []) {
+        if (/^(https?:|data:)/.test(img)) {
+          console.log(
+            `  ! scene ${i + 1}: gambar online ${img} (render butuh internet)`,
+          );
+          continue;
+        }
+        const file = img.startsWith("/")
+          ? path.join(process.cwd(), "public", img.slice(1))
+          : path.join(dir, img);
+        if (!existsSync(file)) {
+          console.log(`  X scene ${i + 1}: gambar tidak ada: ${img}`);
+          failed = true;
+        }
+      }
+      return;
+    }
     if (scene.type !== "code") return;
     const lines = scene.code.replace(/\s+$/, "").split("\n");
     const longest = Math.max(...lines.map((l) => l.length));
     if (longest > MAX_CODE_COLUMNS) {
-      console.log(`  ! scene ${i + 1}: baris kode terpanjang ${longest} karakter (> ${MAX_CODE_COLUMNS}), font akan mengecil`);
+      console.log(
+        `  ! scene ${i + 1}: baris kode terpanjang ${longest} karakter (> ${MAX_CODE_COLUMNS}), font akan mengecil`,
+      );
     }
     for (const [from, to] of scene.highlightLines ?? []) {
       if (from > to || to > lines.length) {
-        console.log(`  X scene ${i + 1}: highlightLines [${from},${to}] di luar ${lines.length} baris`);
+        console.log(
+          `  X scene ${i + 1}: highlightLines [${from},${to}] di luar ${lines.length} baris`,
+        );
         failed = true;
       }
     }
   });
 
-  console.log(existsSync(path.join(dir, video.voice)) ? `  OK suara: ${video.voice}` : `  X file suara tidak ada: ${video.voice}`);
+  console.log(
+    existsSync(path.join(dir, video.voice))
+      ? `  OK suara: ${video.voice}`
+      : `  X file suara tidak ada: ${video.voice}`,
+  );
   if (!existsSync(path.join(dir, video.voice))) failed = true;
-  console.log(existsSync(path.join(dir, "captions.json")) ? "  OK captions.json ada" : `  ! captions.json belum ada -> npm run transcribe ${id}`);
+  console.log(
+    existsSync(path.join(dir, "captions.json"))
+      ? "  OK captions.json ada"
+      : `  ! captions.json belum ada -> npm run transcribe ${id}`,
+  );
 }
 
 process.exit(failed ? 1 : 0);

@@ -1,112 +1,89 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "animated-list" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Daftar dengan bulatan warna; item meluncur masuk bergiliran sepanjang scene.
+// Props: title (opsional), items (isi daftar), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  Emphasis,
+  palette,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Hindari ini di *React*",
+  items: ["Key dari index", "State berlebihan", "useEffect untuk semuanya"],
+};
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
-
-export default function AnimatedList() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  // Sample list items
-  const items = [
-    { name: "Item One", color: "#3b82f6" },
-    { name: "Item Two", color: "#60a5fa" },
-    { name: "Item Three", color: "#93c5fd" },
-  ];
+export default function AnimatedList(props: TemplateProps) {
+  const { title, items, accent, frame, fps, durationInFrames } = useTemplate(
+    props,
+    defaults,
+  );
+  const dots = palette(accent);
+  const lead = title ? Math.round(fps * 0.4) : 0;
+  const stagger = Math.max(4, ((durationInFrames - lead) * 0.6) / items.length);
+  const titleIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
+  const fontSize = items.length > 5 ? 50 : 60;
+  const dot = items.length > 5 ? 64 : 84;
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        maxWidth: "600px",
-        padding: "2rem",
+        ...contentArea,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        gap: items.length > 5 ? 28 : 40,
+        fontFamily: sansFont,
       }}
     >
+      {title ? (
+        <div style={{ opacity: titleIn, marginBottom: 16 }}>
+          <TemplateTitle text={title} accent={accent} max={96} />
+        </div>
+      ) : null}
       {items.map((item, i) => {
-        const delay = i * 5;
-
-        // Slide in from left
-        const slideX = spring({
-          frame: frame - delay,
+        const p = spring({
+          frame: frame - lead - i * stagger,
           fps,
-          from: -100,
-          to: 0,
-          config: {
-            damping: 12,
-            mass: 0.5,
-          },
+          config: { damping: 12, mass: 0.5 },
         });
-
-        // Fade in
-        const opacity = spring({
-          frame: frame - delay,
-          fps,
-          from: 0,
-          to: 1,
-          config: {
-            damping: 12,
-            mass: 0.5,
-          },
-        });
-
-        // Scale up
-        const scale = spring({
-          frame: frame - delay,
-          fps,
-          from: 0.3,
-          to: 1,
-          config: {
-            damping: 12,
-            mass: 0.5,
-          },
-        });
-
         return (
           <div
             key={i}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "1rem",
-              marginBottom: "1rem",
-              transform: `translateX(${slideX}px) scale(${scale})`,
-              opacity,
+              gap: 32,
+              opacity: Math.min(1, p),
+              transform: `translateX(${(1 - p) * -160}px) scale(${0.3 + 0.7 * p})`,
+              transformOrigin: "left center",
             }}
           >
             <div
               style={{
-                width: "80px",
-                height: "80px",
+                flexShrink: 0,
+                width: dot,
+                height: dot,
                 borderRadius: "50%",
-                backgroundColor: item.color,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+                background: dots[i % dots.length],
+                boxShadow: `0 0 30px ${dots[i % dots.length]}66`,
               }}
             />
             <span
               style={{
-                color: "white",
-                fontSize: "3.5rem",
-                fontWeight: "500",
+                fontSize,
+                fontWeight: 700,
+                lineHeight: 1.15,
+                color: colors.text,
               }}
             >
-              {item.name}
+              <Emphasis text={item} color={accent} />
             </span>
           </div>
         );

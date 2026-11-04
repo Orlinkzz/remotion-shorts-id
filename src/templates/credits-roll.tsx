@@ -1,101 +1,98 @@
-"use client";
+// Diadaptasi dari "credits-roll" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Daftar bergulir ke atas sepanjang scene, seperti credit film.
+// Props: title (judul di awal gulungan), items ("Peran: Nama" atau teks biasa), accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  sansFont,
+  theme,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Terima *kasih*",
+  items: [
+    "Bahasa: TypeScript",
+    "Framework: Remotion",
+    "Suara: Edge TTS",
+    "Caption: Whisper.cpp",
+    "Template: React Video Editor",
+    "Dibuat oleh: Senimankode",
+  ],
+};
 
-export default function CreditsRoll() {
-  const frame = useCurrentFrame();
-  const { height } = useVideoConfig();
+const ROW = 170; // tinggi perkiraan per baris credit
 
-  const credits = [
-    { role: "Director", name: "Jane Smith" },
-    { role: "Producer", name: "John Doe" },
-    { role: "Cinematographer", name: "Emily Chen" },
-    { role: "Editor", name: "Michael Park" },
-    { role: "Sound Design", name: "Sarah Johnson" },
-    { role: "Music", name: "David Kim" },
-    { role: "Visual Effects", name: "Lisa Wang" },
-    { role: "Colorist", name: "James Brown" },
-  ];
-
-  const scrollSpeed = 1.5;
-  const translateY = height - frame * scrollSpeed;
+export default function CreditsRoll(props: TemplateProps) {
+  const { title, items, accent, frame, durationInFrames, height } = useTemplate(
+    props,
+    defaults,
+  );
+  const areaHeight = height - theme.layout.top - theme.layout.bottom;
+  const listHeight = 260 + items.length * ROW;
+  // Mulai dari bawah area, habis keluar di atas tepat di akhir scene.
+  const y = interpolate(
+    frame,
+    [0, durationInFrames],
+    [areaHeight, -listHeight],
+    clamp,
+  );
+  const fadeMask =
+    "linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)";
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         overflow: "hidden",
-        position: "relative",
+        fontFamily: sansFont,
+        maskImage: fadeMask,
+        WebkitMaskImage: fadeMask,
       }}
     >
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "80px",
-          background: "linear-gradient(to bottom, #111827, transparent)",
-          zIndex: 2,
-        }}
-      />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: "80px",
-          background: "linear-gradient(to top, #111827, transparent)",
-          zIndex: 2,
-        }}
-      />
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "2.5rem",
-          transform: `translateY(${translateY}px)`,
-          paddingTop: "2rem",
+          textAlign: "center",
+          gap: 56,
+          transform: `translateY(${y}px)`,
         }}
       >
-        {credits.map((credit, i) => (
-          <div
-            key={i}
-            style={{
-              textAlign: "center",
-            }}
-          >
-            <p
-              style={{
-                color: "#3b82f6",
-                fontSize: "0.9rem",
-                fontWeight: 500,
-                letterSpacing: "0.15em",
-                textTransform: "uppercase",
-                margin: 0,
-                marginBottom: "0.4rem",
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {credit.role}
-            </p>
-            <p
-              style={{
-                color: "white",
-                fontSize: "1.5rem",
-                fontWeight: 600,
-                margin: 0,
-                fontFamily: "Inter, sans-serif",
-              }}
-            >
-              {credit.name}
-            </p>
-          </div>
-        ))}
+        <TemplateTitle text={title} accent={accent} max={100} />
+        {items.map((item, i) => {
+          const at = item.indexOf(":");
+          const role = at > 0 ? item.slice(0, at).trim() : "";
+          const name = at > 0 ? item.slice(at + 1).trim() : item;
+          return (
+            <div key={i}>
+              {role ? (
+                <div
+                  style={{
+                    marginBottom: 8,
+                    fontSize: 40,
+                    fontWeight: 600,
+                    letterSpacing: "0.15em",
+                    textTransform: "uppercase",
+                    color: accent,
+                  }}
+                >
+                  {role}
+                </div>
+              ) : null}
+              <div
+                style={{ fontSize: 60, fontWeight: 700, color: colors.text }}
+              >
+                {name}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

@@ -409,7 +409,7 @@
           <div class="card">
             <div class="icon" aria-hidden="true">81</div>
             <h3>81 template</h3>
-            <p>Seluruh template RVE siap dipakai sebagai scene, dari chart, lower third, sampai logo reveal.</p>
+            <p>Chart, counter, transisi, lower third, logo reveal, galeri, dan latar animasi. Semuanya 9:16 dan isinya diatur lewat <code>props</code>.</p>
           </div>
           <div class="card">
             <div class="icon" aria-hidden="true">⏱</div>
@@ -531,7 +531,7 @@ npm run tts &lt;id&gt; -- --force             <span class="c"># timpa rekaman</s
               <tr><td><code>code</code></td><td><code>language</code>, <code>filename?</code>, <code>code</code>, <code>highlightLines?</code></td><td>Jendela editor, baris muncul berurutan lalu disorot bergantian. Usahakan baris ≤ 38 karakter.</td></tr>
               <tr><td><code>points</code></td><td><code>title?</code>, <code>items</code> (1–6)</td><td>Daftar bernomor yang muncul satu per satu.</td></tr>
               <tr><td><code>outro</code></td><td><code>cta</code>, <code>handle?</code></td><td>Kartu ajakan follow dengan nama brand.</td></tr>
-              <tr><td><code>template</code></td><td><code>template</code></td><td>Salah satu dari 81 template RVE, tampil apa adanya.</td></tr>
+              <tr><td><code>template</code></td><td><code>template</code>, <code>props?</code></td><td>Salah satu dari 81 template. <code>props</code>: title, subtitle, text, items, values, value, unit, images, accent (<a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/docs/templates.md">katalog</a>).</td></tr>
             </tbody>
           </table>
         </div>
@@ -571,7 +571,7 @@ npm run tts &lt;id&gt; -- --force             <span class="c"># timpa rekaman</s
   scenes/         Hook, Code, Points, Outro
   components/     Captions, Emphasis
   lib/align.ts    sinkronisasi naskah &lt;-&gt; Whisper
-  templates/      81 template RVE
+  templates/      81 template (diisi lewat props)
 scripts/          tts, transcribe, render, validate
 public/videos/&lt;id&gt;/  video.json, voice.mp3, captions.json
 tts-config.mjs    urutan provider, suara, kecepatan
@@ -652,7 +652,7 @@ Setelah video.json jadi: jalankan npm run validate, lalu npm run tts, lalu valid
         <p class="sub">Kode asli proyek ini berlisensi <a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/LICENSE">MIT</a>. Komponen pihak ketiga tetap memakai lisensinya sendiri, rinciannya di <a href="https://github.com/Orlinkzz/remotion-shorts-id/blob/main/NOTICE.md">NOTICE.md</a>.</p>
         <div class="grid">
           <div class="card"><h3>Remotion</h3><p>Remotion License: gratis (termasuk komersial) untuk individu, perusahaan ≤ 3 karyawan, dan nirlaba. Perusahaan lebih besar wajib membeli Company License. <a href="https://www.remotion.dev/license">Baca ketentuannya</a>.</p></div>
-          <div class="card"><h3>Template RVE</h3><p>Gratis dipakai di proyek apa pun, atribusi dihargai. Header asli tiap file dipertahankan.</p></div>
+          <div class="card"><h3>Template RVE</h3><p>Gratis dipakai di proyek apa pun, atribusi dihargai. Tiap file mencantumkan sumbernya.</p></div>
           <div class="card"><h3>Audio TTS</h3><p>Mengikuti ketentuan provider yang dipakai. Untuk konten komersial, pakai Azure atau Google, atau rekaman sendiri.</p></div>
         </div>
       </div>

@@ -1,82 +1,68 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "pixel-transition" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B: blok piksel muncul acak menutup A, lalu hilang membuka B.
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import { random } from "remotion";
+import {
+  colors,
+  palette,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  items: ["Versi lama"],
+  title: "Versi *baru*",
+  subtitle: "Sudah dirender ulang",
+};
 
-import { random, useCurrentFrame, useVideoConfig } from "remotion";
+const BLOCK = 90;
 
-export default function PixelTransition() {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
-
-  // Pixel size
-  const pixelSize = 20;
-
-  // Calculate grid dimensions
-  const cols = Math.ceil(width / pixelSize);
-  const rows = Math.ceil(height / pixelSize);
-
-  // Create pixel grid
-  const pixels = [];
-
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < cols; x++) {
-      // Use random seed based on position for consistent randomness
-      const seed = x * 1000 + y;
-
-      // Random frame delay for each pixel
-      const delay = Math.floor(random(seed) * 60);
-
-      // Determine if pixel should be visible based on frame
-      const isVisible = frame > delay;
-
-      // Random color for each pixel
-      const hue = Math.floor(random(seed * 2) * 220) + 200;
-      const saturation = 70 + Math.floor(random(seed * 3) * 30);
-      const lightness = 40 + Math.floor(random(seed * 4) * 20);
-
-      if (isVisible) {
-        pixels.push({
-          x: x * pixelSize,
-          y: y * pixelSize,
-          color: `hsl(${hue}, ${saturation}%, ${lightness}%)`,
-        });
-      }
-    }
-  }
+export default function PixelTransition(props: TemplateProps) {
+  const { items, title, subtitle, accent, width, height } = useTemplate(
+    props,
+    defaults,
+  );
+  const p = useTransitionProgress((t) => t);
+  const cols = Math.ceil(width / BLOCK);
+  const rows = Math.ceil(height / BLOCK);
+  const tones = palette(accent)
+    .slice(0, 2)
+    .concat([colors.bgTo, colors.surfaceAlt]);
 
   return (
-    <div
-      style={{
-        width,
-        height,
-        background: "#0f172a",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {pixels.map((pixel, i) => (
-        <div
-          key={i}
-          style={{
-            position: "absolute",
-            left: pixel.x,
-            top: pixel.y,
-            width: pixelSize,
-            height: pixelSize,
-            backgroundColor: pixel.color,
-            transition: "opacity 0.2s ease",
-          }}
+    <>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+      {p < 0.5 ? (
+        <TitleCard
+          title={items[0]}
+          accent={accent}
+          background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
         />
-      ))}
-    </div>
+      ) : null}
+      {p > 0 && p < 1
+        ? Array.from({ length: cols * rows }).map((_, k) => {
+            const delay = random(`pixel-${k}`) * 0.45;
+            // Muncul di paruh pertama, hilang di paruh kedua (urutan acak tetap).
+            const visible = p < 0.5 ? p >= delay : p - 0.5 < delay;
+            if (!visible) return null;
+            return (
+              <div
+                key={k}
+                style={{
+                  position: "absolute",
+                  left: (k % cols) * BLOCK,
+                  top: Math.floor(k / cols) * BLOCK,
+                  width: BLOCK,
+                  height: BLOCK,
+                  backgroundColor:
+                    tones[Math.floor(random(`tone-${k}`) * tones.length)],
+                }}
+              />
+            );
+          })
+        : null}
+    </>
   );
 }

@@ -1,101 +1,61 @@
-"use client";
+// Diadaptasi dari "noise-grain" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Tekstur grain film yang berganti tiap frame, di atas judul.
+// Props: title, subtitle, accent.
+import { random } from "remotion";
+import {
+  TitleCard,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Kode *lawas*",
+  subtitle: "Masih jalan, tapi berdebu",
+};
 
-export default function NoiseGrain() {
-  const frame = useCurrentFrame();
-  const { width, height } = useVideoConfig();
-
-  const cellSize = 8;
-  const cols = Math.ceil(width / cellSize);
-  const rows = Math.ceil(height / cellSize);
-
-  // Deterministic pseudo-random based on index and frame
-  const pseudoRandom = (index: number, f: number) => {
-    const val = ((index * 1237 + f * 7919) % 997) / 997;
-    return val;
-  };
-
-  // Build grain cells
-  const grainCells = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const index = row * cols + col;
-      const noise = pseudoRandom(index, frame);
-      // Opacity between 0.02 and 0.08
-      const opacity = 0.02 + noise * 0.06;
-      grainCells.push({ col, row, opacity, key: index });
-    }
-  }
+export default function NoiseGrain(props: TemplateProps) {
+  const { title, subtitle, accent, frame, width, height } = useTemplate(
+    props,
+    defaults,
+  );
+  // Pola grain baru tiap 2 frame, dari seed deterministik.
+  const step = Math.floor(frame / 2);
+  const seed = Math.floor(random(`grain-${step}`) * 1000);
+  const flicker = 0.85 + random(`flicker-${step}`) * 0.15;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Sample gradient background */}
+    <>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+      <svg
+        width={width}
+        height={height}
+        style={{
+          position: "absolute",
+          inset: 0,
+          opacity: 0.16 * flicker,
+          mixBlendMode: "overlay",
+        }}
+      >
+        <filter id="noise-grain-filter">
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency={0.9}
+            numOctaves={2}
+            seed={seed}
+            stitchTiles="stitch"
+          />
+          <feColorMatrix type="saturate" values="0" />
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noise-grain-filter)" />
+      </svg>
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+          background:
+            "radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,0.45) 100%)",
         }}
       />
-      {/* Centered sample text */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          zIndex: 1,
-        }}
-      >
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-          }}
-        >
-          Film Grain Overlay
-        </h2>
-        <p style={{ color: "#93c5fd", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Subtle noise texture effect
-        </p>
-      </div>
-      {/* Grain overlay using SVG for performance */}
-      <svg
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          zIndex: 2,
-          pointerEvents: "none",
-        }}
-        viewBox={`0 0 ${width} ${height}`}
-        preserveAspectRatio="none"
-      >
-        {grainCells.map((cell) => (
-          <rect
-            key={cell.key}
-            x={cell.col * cellSize}
-            y={cell.row * cellSize}
-            width={cellSize}
-            height={cellSize}
-            fill="white"
-            opacity={cell.opacity}
-          />
-        ))}
-      </svg>
-    </div>
+    </>
   );
 }

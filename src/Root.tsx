@@ -4,10 +4,8 @@ import {
   Short,
   shortSchema,
 } from "./compositions/Short";
-import { notebookPaperDefaults } from "./compositions/notebook-paper.element";
+import { TemplateGallery } from "./compositions/TemplateGallery";
 import { theme } from "./theme";
-import { templateNames } from "./templates/names";
-import { templateRegistry } from "./templates/registry";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -21,24 +19,28 @@ export const RemotionRoot: React.FC = () => {
         height={theme.height}
         fps={theme.fps}
         durationInFrames={theme.fps * 30}
+        // Harus literal (bukan variabel) supaya tombol Save di panel Props
+        // Studio bisa menulis ulang nilai ini. Awal = notebookPaperDefaults.
         defaultProps={{
           videoId: "n-plus-one",
-          bg: notebookPaperDefaults,
+          bg: {
+            palette: "custom",
+            baseColor: "#080b1a",
+            blob1: "#4f46e5",
+            blob2: "#7c3aed",
+            blob3: "#1d4ed8",
+            blob4: "#a5b4fc",
+            gridColor: "rgba(255, 255, 255, 0.06)",
+            gridSize: 54,
+            glowOpacity: 0.4,
+            animate: true,
+          },
         }}
       />
-      {/* Galeri: 81 template RVE apa adanya, untuk dicek satu per satu di Studio. */}
+      {/* Galeri: 81 template dengan isi contoh, props bisa dicoba di panel Studio.
+          Dibuat otomatis oleh npm run gen:templates (src/compositions/TemplateGallery.tsx). */}
       <Folder name="Templates">
-        {templateNames.map((name) => (
-          <Composition
-            key={name}
-            id={`tpl-${name}`}
-            component={templateRegistry[name]}
-            width={theme.width}
-            height={theme.height}
-            fps={theme.fps}
-            durationInFrames={theme.fps * 6}
-          />
-        ))}
+        <TemplateGallery />
       </Folder>
     </>
   );

@@ -1,114 +1,80 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "bounce-text" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kartu gradien yang membesar, judul meluncur masuk, subjudul menyusul.
+// Props: title (judul, *kata* = aksen), subtitle (opsional), accent.
+import { spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Mulai *ngoding*",
+  subtitle: "Tidak pernah ada waktu yang lebih baik",
+};
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+export default function BounceText(props: TemplateProps) {
+  const { title, subtitle, accent, frame, fps } = useTemplate(props, defaults);
 
-export default function BounceText() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const slideIn = spring({
+  const slide = spring({ frame, fps, config: { damping: 14, stiffness: 160 } });
+  const scale = spring({
     frame,
     fps,
-    from: -100,
-    to: 0,
-    config: {
-      damping: 100,
-      mass: 1,
-      stiffness: 200,
-    },
-  });
-
-  const fadeIn = spring({
-    frame: frame - 15, // Slight delay for subtitle
-    fps,
-    from: 0,
+    from: 0.6,
     to: 1,
-    config: {
-      damping: 100,
-      mass: 1,
-    },
+    config: { damping: 12, stiffness: 180 },
   });
-
-  const scaleIn = spring({
-    frame,
-    fps,
-    from: 0.5,
-    to: 0.8,
-    config: {
-      damping: 100,
-      mass: 1,
-      stiffness: 200,
-    },
-  });
-
-  const containerFadeIn = spring({
-    frame,
-    fps,
-    from: 0,
-    to: 1,
-    config: {
-      damping: 100,
-      mass: 1,
-    },
-  });
+  const fade = spring({ frame, fps, config: { damping: 100 } });
+  const subIn = spring({ frame: frame - 15, fps, config: { damping: 100 } });
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: `translate(-50%, -50%) scale(${scaleIn})`,
-        width: "80%",
-        padding: "2rem 3rem",
-        background: "linear-gradient(45deg, #1e3a8a, #3b82f6)",
-        borderRadius: "20px",
-        opacity: containerFadeIn,
+        ...contentArea,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: sansFont,
       }}
     >
       <div
         style={{
-          transform: `translateX(${slideIn}%)`,
+          width: "100%",
+          padding: "72px 56px",
+          borderRadius: 40,
+          overflow: "hidden",
+          background: `linear-gradient(45deg, rgba(30,58,138,0.85), color-mix(in srgb, ${accent} 80%, transparent))`,
+          boxShadow: "0 20px 60px rgba(0,0,0,0.35)",
+          opacity: fade,
+          transform: `scale(${scale})`,
         }}
       >
-        <h1
-          style={{
-            fontSize: "3.5rem",
-            fontWeight: "900",
-            color: "white",
-            margin: 0,
-            lineHeight: "1",
-            fontFamily: "Inter, sans-serif",
-            textShadow: "0px 4px 8px rgba(0, 0, 0, 0.3)",
-          }}
-        >
-          Start Building
-        </h1>
-        <h2
-          style={{
-            fontSize: "1.8rem",
-            color: "white",
-            margin: 0,
-            marginTop: "0.75rem",
-            fontWeight: "500",
-            opacity: fadeIn,
-            fontFamily: "Inter, sans-serif",
-            textShadow: "0px 2px 4px rgba(0, 0, 0, 0.2)",
-          }}
-        >
-          Theres never been a better time
-        </h2>
+        <div style={{ transform: `translateX(${(1 - slide) * -110}%)` }}>
+          <TemplateTitle
+            text={title}
+            accent={colors.highlight}
+            max={120}
+            style={{ textShadow: "0 4px 8px rgba(0,0,0,0.3)" }}
+          />
+        </div>
+        {subtitle ? (
+          <div
+            style={{
+              marginTop: 28,
+              fontSize: 48,
+              fontWeight: 600,
+              lineHeight: 1.25,
+              color: colors.text,
+              opacity: subIn,
+              transform: `translateY(${(1 - subIn) * 20}px)`,
+            }}
+          >
+            {subtitle}
+          </div>
+        ) : null}
       </div>
     </div>
   );

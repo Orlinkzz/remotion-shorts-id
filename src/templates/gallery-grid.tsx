@@ -1,62 +1,91 @@
-"use client";
+// Diadaptasi dari "gallery-grid" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Grid gambar 2 kolom yang muncul satu per satu dengan efek pegas.
+// Props: images (1-8 gambar), items (keterangan per gambar), title (opsional), accent.
+import { spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  sansFont,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, spring, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Struktur *proyek*",
+  items: ["components", "hooks", "pages", "utils"],
+};
 
-export default function GalleryGrid() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const cells = [
-    { gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)", delay: 0 },
-    { gradient: "linear-gradient(135deg, #a855f7, #7c3aed)", delay: 4 },
-    { gradient: "linear-gradient(135deg, #4361ee, #3b82f6)", delay: 8 },
-    { gradient: "linear-gradient(135deg, #7209b7, #a855f7)", delay: 12 },
-    { gradient: "linear-gradient(135deg, #1d4ed8, #4361ee)", delay: 16 },
-    { gradient: "linear-gradient(135deg, #7c3aed, #7209b7)", delay: 20 },
-  ];
+export default function GalleryGrid(props: TemplateProps) {
+  const { title, items, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const count = images?.length ?? items.length;
+  const cols = count === 1 ? 1 : count <= 4 ? 2 : 3;
+  const stagger = Math.min(8, Math.floor((fps * 1.2) / Math.max(1, count)));
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
         justifyContent: "center",
-        alignItems: "center",
-        overflow: "hidden",
-        padding: "2rem",
+        gap: 40,
+        fontFamily: sansFont,
       }}
     >
+      {title ? <TemplateTitle text={title} accent={accent} max={88} /> : null}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr 1fr",
-          gridTemplateRows: "1fr 1fr",
-          gap: "1rem",
-          width: "90%",
-          height: "80%",
+          gridTemplateColumns: `repeat(${cols}, 1fr)`,
+          gap: 24,
         }}
       >
-        {cells.map((cell, i) => {
+        {Array.from({ length: count }, (_, i) => {
           const s = spring({
-            frame: Math.max(frame - cell.delay, 0),
+            frame: frame - 6 - i * stagger,
             fps,
             config: { damping: 12, stiffness: 100 },
           });
-
-          const scale = 0.8 + s * 0.2;
-
           return (
             <div
               key={i}
               style={{
-                background: cell.gradient,
-                borderRadius: "10px",
-                transform: `scale(${scale})`,
-                opacity: s,
+                position: "relative",
+                aspectRatio: cols === 1 ? "4 / 3" : "1 / 1",
+                borderRadius: 28,
+                overflow: "hidden",
+                border: `2px solid ${colors.surfaceAlt}`,
+                boxShadow: "0 16px 40px rgba(0,0,0,0.35)",
+                opacity: Math.min(1, s),
+                transform: `scale(${0.8 + 0.2 * s})`,
               }}
-            />
+            >
+              <TemplateImage src={images?.[i]} index={i} label="" />
+              {items[i] ? (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    padding: "48px 20px 18px",
+                    background:
+                      "linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.75))",
+                    color: colors.text,
+                    fontSize: 40,
+                    fontWeight: 700,
+                    textAlign: "center",
+                  }}
+                >
+                  {items[i]}
+                </div>
+              ) : null}
+            </div>
           );
         })}
       </div>

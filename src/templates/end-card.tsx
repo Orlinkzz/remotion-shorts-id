@@ -1,162 +1,143 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
-
-"use client";
-
+// Diadaptasi dari "end-card" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kartu penutup bercahaya: judul, tombol ajakan, dan deretan tautan/akun.
+// Props: title (judul), subtitle (teks tombol), items (tautan/akun, opsional), text (label kecil di bawah), accent.
+import { interpolate, spring } from "remotion";
 import {
-  interpolate,
-  spring,
-  useCurrentFrame,
-  useVideoConfig,
-} from "remotion";
+  colors,
+  contentArea,
+  palette,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-export default function EndCard() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const defaults = {
+  title: "Terima kasih sudah *nonton*",
+  subtitle: "Follow untuk tips berikutnya",
+  items: ["@senimankode", "github.com/senimankode"],
+  text: "SENIMANKODE",
+};
 
+export default function EndCard(props: TemplateProps) {
+  const { title, subtitle, items, text, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
   const scale = spring({
     frame,
     fps,
     from: 0.8,
     to: 1,
-    durationInFrames: 35,
-    config: {
-      damping: 12,
-      mass: 0.6,
-    },
+    config: { damping: 12, mass: 0.6 },
   });
-
-  const contentOpacity = spring({
-    frame,
-    fps,
-    from: 0,
-    to: 1,
-    durationInFrames: 30,
-  });
-
-  const glowOpacity = interpolate(
-    Math.sin(frame * 0.08),
-    [-1, 1],
-    [0.3, 0.7]
-  );
-
-  const buttonOpacity = spring({
-    frame: Math.max(0, frame - 20),
-    fps,
-    from: 0,
-    to: 1,
-    durationInFrames: 25,
-  });
-
-  const iconsOpacity = spring({
-    frame: Math.max(0, frame - 30),
-    fps,
-    from: 0,
-    to: 1,
-    durationInFrames: 25,
-  });
-
-  const socialColors = ["#3b82f6", "#4361ee", "#7209b7", "#9333ea"];
+  const fade = spring({ frame, fps, config: { damping: 100 } });
+  const glow = interpolate(Math.sin(frame * 0.08), [-1, 1], [0.3, 0.8]);
+  const buttonIn = spring({ frame: frame - 20, fps, config: { damping: 100 } });
+  const tones = palette(accent);
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "linear-gradient(135deg, #111827 0%, #1a1a2e 100%)",
+        ...contentArea,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        fontFamily: sansFont,
       }}
     >
       <div
         style={{
-          transform: `scale(${scale})`,
-          opacity: contentOpacity,
+          width: "100%",
+          padding: "72px 48px",
+          borderRadius: 40,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          padding: 48,
-          borderRadius: 16,
-          border: `2px solid rgba(67, 97, 238, ${glowOpacity})`,
-          boxShadow: `0 0 40px rgba(67, 97, 238, ${glowOpacity * 0.3})`,
+          textAlign: "center",
           background: "rgba(17, 24, 39, 0.8)",
+          border: `3px solid color-mix(in srgb, ${accent} ${Math.round(glow * 100)}%, transparent)`,
+          boxShadow: `0 0 60px color-mix(in srgb, ${accent} ${Math.round(glow * 40)}%, transparent)`,
+          opacity: fade,
+          transform: `scale(${scale})`,
         }}
       >
-        <h1
-          style={{
-            color: "white",
-            fontSize: "3.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            letterSpacing: "0.03em",
-          }}
-        >
-          Thanks for Watching
-        </h1>
-        <div
-          style={{
-            opacity: buttonOpacity,
-            marginTop: 32,
-            padding: "14px 40px",
-            background: "linear-gradient(90deg, #4361ee, #7209b7)",
-            borderRadius: 8,
-            cursor: "pointer",
-          }}
-        >
-          <span
+        <TemplateTitle text={title} accent={accent} max={96} />
+        {subtitle ? (
+          <div
             style={{
-              color: "white",
-              fontSize: "1.2rem",
-              fontWeight: 600,
-              letterSpacing: "0.05em",
+              marginTop: 48,
+              padding: "28px 56px",
+              borderRadius: 20,
+              fontSize: 46,
+              fontWeight: 700,
+              color: colors.text,
+              background: `linear-gradient(90deg, ${accent}, ${colors.accent2})`,
+              opacity: buttonIn,
+              transform: `scale(${0.8 + 0.2 * buttonIn})`,
             }}
           >
-            Subscribe for More
-          </span>
-        </div>
+            {subtitle}
+          </div>
+        ) : null}
         <div
           style={{
             display: "flex",
-            gap: 16,
-            marginTop: 32,
-            opacity: iconsOpacity,
+            flexDirection: "column",
+            gap: 20,
+            marginTop: 48,
+            width: "100%",
           }}
         >
-          {socialColors.map((color, i) => (
-            <div
-              key={i}
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                background: color,
-              }}
-            />
-          ))}
+          {items.map((item, i) => {
+            const p = spring({
+              frame: frame - 30 - i * 6,
+              fps,
+              config: { damping: 14 },
+            });
+            return (
+              <div
+                key={i}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 20,
+                  fontSize: 42,
+                  fontWeight: 600,
+                  color: colors.text,
+                  opacity: Math.min(1, p),
+                  transform: `translateY(${(1 - p) * 20}px)`,
+                }}
+              >
+                <div
+                  style={{
+                    width: 24,
+                    height: 24,
+                    flexShrink: 0,
+                    borderRadius: "50%",
+                    background: tones[i % tones.length],
+                  }}
+                />
+                {item}
+              </div>
+            );
+          })}
         </div>
-        <p
-          style={{
-            color: "rgba(255, 255, 255, 0.5)",
-            fontSize: "0.9rem",
-            marginTop: 28,
-            letterSpacing: "0.1em",
-            fontWeight: 300,
-          }}
-        >
-          STUDIO CREATIVE
-        </p>
+        {text ? (
+          <div
+            style={{
+              marginTop: 44,
+              fontSize: 40,
+              fontWeight: 500,
+              letterSpacing: "0.12em",
+              color: "rgba(255,255,255,0.5)",
+              opacity: buttonIn,
+            }}
+          >
+            {text}
+          </div>
+        ) : null}
       </div>
     </div>
   );

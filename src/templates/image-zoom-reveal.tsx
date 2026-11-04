@@ -1,78 +1,95 @@
-"use client";
+// Diadaptasi dari "image-zoom-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Gambar membesar dari blur ke tajam, lalu judul muncul di atasnya.
+// Props: images[0], title (judul di atas gambar), subtitle (opsional), accent.
+import { Easing, interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  sansFont,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Hasil *akhirnya*",
+};
 
-export default function ImageZoomReveal() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const duration = fps * 2;
-
-  const scale = interpolate(frame, [0, duration], [2, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
+export default function ImageZoomReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const reveal = fps * 1.3;
+  const scale = interpolate(frame, [0, reveal], [1.6, 1], {
+    ...clamp,
+    easing: Easing.out(Easing.cubic),
   });
-
-  const blur = interpolate(frame, [0, duration], [10, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const textOpacity = interpolate(frame, [duration * 0.6, duration], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const blur = interpolate(frame, [0, reveal], [16, 0], clamp);
+  const frameIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
+  const textIn = interpolate(frame, [reveal * 0.6, reveal], [0, 1], clamp);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
+        fontFamily: sansFont,
       }}
     >
       <div
         style={{
-          width: "80%",
-          height: "70%",
-          borderRadius: "12px",
-          overflow: "hidden",
-          border: "3px solid #1e293b",
           position: "relative",
+          width: "100%",
+          height: "100%",
+          borderRadius: 40,
+          overflow: "hidden",
+          border: `3px solid ${colors.surfaceAlt}`,
+          boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+          opacity: frameIn,
         }}
       >
         <div
           style={{
-            width: "100%",
-            height: "100%",
-            background: "linear-gradient(135deg, #4361ee, #7209b7, #a855f7)",
+            position: "absolute",
+            inset: 0,
             transform: `scale(${scale})`,
             filter: `blur(${blur}px)`,
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        />
-        <span
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-            color: "white",
-            fontSize: "1.8rem",
-            fontWeight: 600,
-            opacity: textOpacity,
-            fontFamily: "Inter, sans-serif",
-            textShadow: "0 2px 8px rgba(0,0,0,0.5)",
           }}
         >
-          Featured Image
-        </span>
+          <TemplateImage src={images?.[0]} label="" />
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            padding: "160px 48px 56px",
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.8))",
+            opacity: textIn,
+            transform: `translateY(${(1 - textIn) * 30}px)`,
+          }}
+        >
+          <TemplateTitle text={title} accent={accent} max={92} />
+          {subtitle ? (
+            <div
+              style={{
+                marginTop: 16,
+                fontSize: 44,
+                fontWeight: 600,
+                color: colors.muted,
+              }}
+            >
+              {subtitle}
+            </div>
+          ) : null}
+        </div>
       </div>
     </div>
   );

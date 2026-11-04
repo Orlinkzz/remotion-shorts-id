@@ -1,150 +1,141 @@
-/** Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "notification-pop" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Notifikasi ponsel meluncur masuk satu per satu dari kanan, yang pertama berlencana jumlah.
+// Props: title (nama aplikasi/pengirim), text (isi notifikasi utama), subtitle (waktu),
+//        items (notifikasi tambahan, opsional), accent.
+import { interpolate, spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  fitFontSize,
+  palette,
+  plain,
+  sansFont,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "GitHub Actions",
+  text: "Build gagal di branch main",
+  subtitle: "baru saja",
+  items: ["Pull request #42 disetujui", "3 komentar baru di review kamu"],
+};
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
-
-export default function NotificationPop() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const notifications = [
-    { title: "New Message", body: "Hey! Check out this update.", color: "#3b82f6", delay: 0 },
-    { title: "Task Complete", body: "Your render finished successfully.", color: "#a855f7", delay: 20 },
-    { title: "New Follower", body: "Someone started following you.", color: "#4361ee", delay: 40 },
-  ];
+export default function NotificationPop(props: TemplateProps) {
+  const { title, text, subtitle, items, accent, frame, fps, durationInFrames } =
+    useTemplate(props, defaults);
+  const all = [text, ...items].slice(0, 6);
+  const tones = palette(accent);
+  // Jeda antarnotifikasi mengecil kalau scene pendek.
+  const gap = Math.min(20, (durationInFrames * 0.5) / Math.max(1, all.length));
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        background: "linear-gradient(180deg, #111827, #1f2937)",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
-        alignItems: "flex-end",
-        padding: "40px",
-        overflow: "hidden",
-        position: "relative",
+        gap: 28,
+        fontFamily: sansFont,
       }}
     >
-      <h2
-        style={{
-          position: "absolute",
-          top: "40px",
-          left: "40px",
-          color: "white",
-          fontSize: "1.8rem",
-          fontWeight: "bold",
-          fontFamily: "Inter, sans-serif",
-          margin: 0,
-        }}
-      >
-        Notifications
-      </h2>
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          alignItems: "flex-end",
-        }}
-      >
-        {notifications.map((notif, i) => {
-          const delayedFrame = Math.max(0, frame - notif.delay);
-          const slideIn = spring({
-            frame: delayedFrame,
-            fps,
-            config: { damping: 14, stiffness: 180, mass: 0.6 },
-          });
-
-          const translateX = interpolate(slideIn, [0, 1], [300, 0]);
-          const opacity = interpolate(slideIn, [0, 1], [0, 1]);
-
-          return (
+      {all.map((body, i) => {
+        const slide = spring({
+          frame: frame - i * gap,
+          fps,
+          config: { damping: 14, stiffness: 180, mass: 0.6 },
+        });
+        return (
+          <div
+            key={i}
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 28,
+              padding: "32px 36px",
+              borderRadius: 36,
+              background: "rgba(31, 41, 55, 0.92)",
+              border: "2px solid rgba(255,255,255,0.1)",
+              boxShadow: "0 12px 36px rgba(0,0,0,0.35)",
+              opacity: interpolate(slide, [0, 1], [0, 1]),
+              transform: `translateX(${(1 - slide) * 1000}px)`,
+            }}
+          >
             <div
-              key={i}
               style={{
-                transform: `translateX(${translateX}px)`,
-                opacity,
-                width: "320px",
-                padding: "16px",
-                borderRadius: "12px",
-                background: "rgba(31, 41, 55, 0.9)",
-                border: `1px solid rgba(255, 255, 255, 0.1)`,
+                width: 88,
+                height: 88,
+                flexShrink: 0,
+                borderRadius: 24,
+                background: tones[i % tones.length],
                 display: "flex",
-                alignItems: "flex-start",
-                gap: "12px",
-                position: "relative",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 48,
+                fontWeight: 900,
+                color: colors.bgFrom,
               }}
             >
+              {plain(title).slice(0, 1).toUpperCase()}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  width: "40px",
-                  height: "40px",
-                  borderRadius: "50%",
-                  background: notif.color,
-                  flexShrink: 0,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  gap: 16,
+                  marginBottom: 8,
                 }}
-              />
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    color: "white",
-                    fontSize: "0.95rem",
-                    fontWeight: "600",
-                    fontFamily: "Inter, sans-serif",
-                    marginBottom: "4px",
-                  }}
+              >
+                <span
+                  style={{ fontSize: 40, fontWeight: 700, color: colors.text }}
                 >
-                  {notif.title}
-                </div>
-                <div
-                  style={{
-                    color: "#9ca3af",
-                    fontSize: "0.8rem",
-                    fontFamily: "Inter, sans-serif",
-                  }}
-                >
-                  {notif.body}
-                </div>
+                  {plain(title)}
+                </span>
+                {subtitle ? (
+                  <span
+                    style={{ fontSize: 34, color: colors.muted, flexShrink: 0 }}
+                  >
+                    {subtitle}
+                  </span>
+                ) : null}
               </div>
-              {i === 0 && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "-6px",
-                    right: "-6px",
-                    width: "22px",
-                    height: "22px",
-                    borderRadius: "50%",
-                    background: "#ef4444",
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    color: "white",
-                    fontSize: "0.7rem",
-                    fontWeight: "bold",
-                    fontFamily: "Inter, sans-serif",
-                  }}
-                >
-                  3
-                </div>
-              )}
+              <div
+                style={{
+                  fontSize: fitFontSize(body, 46, 40, 30),
+                  lineHeight: 1.3,
+                  color: "#CBD5E1",
+                }}
+              >
+                {body}
+              </div>
             </div>
-          );
-        })}
-      </div>
+            {i === 0 && all.length > 1 ? (
+              <div
+                style={{
+                  position: "absolute",
+                  top: -14,
+                  right: -14,
+                  width: 56,
+                  height: 56,
+                  borderRadius: "50%",
+                  background: "#EF4444",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                  fontWeight: 800,
+                  color: "white",
+                }}
+              >
+                {all.length}
+              </div>
+            ) : null}
+          </div>
+        );
+      })}
     </div>
   );
 }

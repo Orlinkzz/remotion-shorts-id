@@ -1,210 +1,179 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "donut-chart" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Donat bersegmen yang tergambar bergiliran, angka utama di tengah, legenda di bawah.
+// Props: title, items (label segmen), values (porsi), value (angka di tengah, default segmen pertama dalam %), unit, subtitle (label tengah), accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  formatNumber,
+  palette,
+  sansFont,
+  series,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Isi *bundle* JavaScript",
+  subtitle: "kode sendiri",
+  items: ["Kode sendiri", "React", "Lodash", "Lainnya"],
+  values: [38, 27, 20, 15],
+  unit: "%",
+};
 
-import { interpolate, useCurrentFrame } from "remotion";
+const SIZE = 700;
+const R = 270;
+const STROKE = 70;
 
-export default function DonutChart() {
-  const frame = useCurrentFrame();
-
-  const segments = [
-    { label: "Completed", value: 40, color: "#4361ee" },
-    { label: "In Progress", value: 25, color: "#7209b7" },
-    { label: "Pending", value: 20, color: "#f72585" },
-    { label: "Remaining", value: 15, color: "#4cc9f0" },
-  ];
-
-  const total = segments.reduce((sum, s) => sum + s.value, 0);
-  const cx = 300;
-  const cy = 230;
-  const radius = 120;
-  const strokeWidth = 20;
-  const circumference = 2 * Math.PI * radius;
-
-  let cumulativeOffset = 0;
-
-  // Center stat animation
-  const centerValue = Math.round(
-    interpolate(frame, [10, 50], [0, 78], {
-      extrapolateRight: "clamp",
-      extrapolateLeft: "clamp",
-    })
+export default function DonutChart(props: TemplateProps) {
+  const {
+    title,
+    subtitle,
+    items,
+    values,
+    value,
+    unit,
+    accent,
+    frame,
+    fps,
+    durationInFrames,
+  } = useTemplate(props, defaults);
+  const data = series(items, values);
+  const total = Math.max(
+    1e-6,
+    data.reduce((s, d) => s + d.value, 0),
   );
+  const center = value ?? Math.round(((data[0]?.value ?? 0) / total) * 100);
+  const segColors = palette(accent);
+  const circumference = 2 * Math.PI * R;
+  const step = Math.min(fps * 0.4, (durationInFrames * 0.5) / data.length);
+  const titleIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
+  const count = interpolate(frame, [6, fps * 1.6], [0, center], clamp);
+
+  let offset = 0;
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        height: "100%",
+        ...contentArea,
         display: "flex",
+        flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "Inter, system-ui, sans-serif",
-        background: "linear-gradient(to bottom right, #111827, #1f2937)",
+        gap: 44,
+        fontFamily: sansFont,
       }}
     >
-      <div
-        style={{
-          position: "relative",
-          width: "600px",
-          height: "520px",
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          borderRadius: "16px",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-          overflow: "hidden",
-          padding: "20px",
-        }}
-      >
-        {/* Title */}
-        <div
-          style={{
-            position: "absolute",
-            top: "20px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            fontSize: "28px",
-            fontWeight: "bold",
-            color: "white",
-            textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-            letterSpacing: "-0.5px",
-          }}
-        >
-          Completion Rate
-        </div>
-
-        <svg width={600} height={460} style={{ marginTop: "10px" }}>
-          {/* Background ring */}
+      <div style={{ opacity: titleIn, textAlign: "center" }}>
+        <TemplateTitle text={title} accent={accent} max={88} />
+      </div>
+      <div style={{ position: "relative", width: SIZE, height: SIZE }}>
+        <svg width={SIZE} height={SIZE}>
           <circle
-            cx={cx}
-            cy={cy}
-            r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth={strokeWidth}
+            cx={SIZE / 2}
+            cy={SIZE / 2}
+            r={R}
+            fill="rgba(17, 24, 39, 0.6)"
+            stroke="rgba(255,255,255,0.06)"
+            strokeWidth={STROKE}
           />
-
-          {/* Donut segments */}
-          {segments.map((segment, i) => {
-            const segmentLength = (segment.value / total) * circumference;
-            const currentOffset = cumulativeOffset;
-            cumulativeOffset += segmentLength;
-
-            const segmentProgress = interpolate(
+          {data.map((d, i) => {
+            const len = (d.value / total) * circumference;
+            const start = offset;
+            offset += len;
+            const p = interpolate(
               frame,
-              [i * 12, 20 + i * 12],
+              [i * step, i * step + fps * 0.6],
               [0, 1],
-              { extrapolateRight: "clamp", extrapolateLeft: "clamp" }
+              clamp,
             );
-
-            const animatedLength = segmentLength * segmentProgress;
-
+            const shown = Math.max(0, len * p - 4);
             return (
               <circle
-                key={`seg-${i}`}
-                cx={cx}
-                cy={cy}
-                r={radius}
+                key={i}
+                cx={SIZE / 2}
+                cy={SIZE / 2}
+                r={R}
                 fill="none"
-                stroke={segment.color}
-                strokeWidth={strokeWidth}
-                strokeLinecap="round"
-                strokeDasharray={`${animatedLength} ${circumference - animatedLength}`}
-                strokeDashoffset={-currentOffset}
-                transform={`rotate(-90 ${cx} ${cy})`}
+                stroke={segColors[i % segColors.length]}
+                strokeWidth={STROKE}
+                strokeDasharray={`${shown} ${circumference - shown}`}
+                strokeDashoffset={-start}
+                transform={`rotate(-90 ${SIZE / 2} ${SIZE / 2})`}
               />
             );
           })}
-
-          {/* Center number */}
-          <text
-            x={cx}
-            y={cy - 5}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="white"
-            fontSize="48"
-            fontWeight="bold"
-          >
-            {centerValue}%
-          </text>
-
-          {/* Center label */}
-          <text
-            x={cx}
-            y={cy + 30}
-            textAnchor="middle"
-            dominantBaseline="middle"
-            fill="rgba(255,255,255,0.6)"
-            fontSize="16"
-          >
-            Completion Rate
-          </text>
         </svg>
-
-        {/* Legend */}
         <div
           style={{
             position: "absolute",
-            bottom: "25px",
-            left: "50%",
-            transform: "translateX(-50%)",
+            inset: 0,
             display: "flex",
-            gap: "20px",
-            flexWrap: "wrap",
+            flexDirection: "column",
+            alignItems: "center",
             justifyContent: "center",
           }}
         >
-          {segments.map((segment, i) => {
-            const legendOpacity = interpolate(
-              frame,
-              [5 + i * 12, 15 + i * 12],
-              [0, 1],
-              { extrapolateRight: "clamp", extrapolateLeft: "clamp" }
-            );
-
-            return (
-              <div
-                key={`legend-${i}`}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
-                  opacity: legendOpacity,
-                }}
-              >
-                <div
-                  style={{
-                    width: "10px",
-                    height: "10px",
-                    borderRadius: "50%",
-                    backgroundColor: segment.color,
-                  }}
-                />
-                <span
-                  style={{
-                    color: "rgba(255,255,255,0.8)",
-                    fontSize: "13px",
-                  }}
-                >
-                  {segment.label}
-                </span>
-              </div>
-            );
-          })}
+          <div
+            style={{
+              fontSize: 128,
+              fontWeight: 900,
+              color: colors.text,
+              lineHeight: 1,
+            }}
+          >
+            {formatNumber(count, Number.isInteger(center) ? 0 : 1) + unit}
+          </div>
+          <div
+            style={{
+              marginTop: 12,
+              fontSize: 40,
+              fontWeight: 600,
+              color: colors.muted,
+            }}
+          >
+            {subtitle}
+          </div>
         </div>
+      </div>
+      <div
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "center",
+          gap: "16px 36px",
+        }}
+      >
+        {data.map((d, i) => (
+          <div
+            key={i}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              opacity: interpolate(
+                frame,
+                [i * step + 4, i * step + 14],
+                [0, 1],
+                clamp,
+              ),
+            }}
+          >
+            <div
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: "50%",
+                background: segColors[i % segColors.length],
+              }}
+            />
+            <span style={{ fontSize: 40, fontWeight: 600, color: colors.text }}>
+              {d.label}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );

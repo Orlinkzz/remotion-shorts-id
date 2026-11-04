@@ -1,69 +1,79 @@
-/** Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "rotating-carousel" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Kartu berputar seperti korsel 3D; tiap kartu bergiliran tampil di depan.
+// Props: items (label kartu), images (opsional, gambar kartu), title (judul atas), accent.
+import { Easing, interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  palette,
+  sansFont,
+  TemplateImage,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Fitur *ES2024*",
+  items: [
+    "Array.groupBy",
+    "Promise.withResolvers",
+    "toSorted()",
+    "Set methods",
+  ],
+};
 
-import { useCurrentFrame, interpolate, useVideoConfig } from "remotion";
+const CARD_W = 460;
+const CARD_H = 620;
 
-export default function RotatingCarousel() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const cards = ["Feature 1", "Feature 2", "Feature 3", "Feature 4"];
-  const rotationSpeed = 0.015;
-  const angle = frame * rotationSpeed;
+export default function RotatingCarousel(props: TemplateProps) {
+  const { title, items, images, accent, frame, fps, progress } = useTemplate(
+    props,
+    defaults,
+  );
+  const count = Math.max(images?.length ?? 0, items.length);
+  const colorsFor = palette(accent);
+  // Berputar sampai kartu terakhir di depan di ujung scene.
+  const angle =
+    Easing.inOut(Easing.ease)(
+      interpolate(progress, [0.05, 0.95], [0, 1], clamp),
+    ) *
+    ((Math.PI * 2 * (count - 1)) / count);
+  const enter = spring({ frame, fps, config: { damping: 14 } });
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        background: "linear-gradient(180deg, #111827, #1f2937)",
+        ...contentArea,
         display: "flex",
-        justifyContent: "center",
+        flexDirection: "column",
         alignItems: "center",
-        overflow: "hidden",
-        position: "relative",
+        gap: 40,
+        fontFamily: sansFont,
       }}
     >
-      <h2
-        style={{
-          position: "absolute",
-          top: "40px",
-          color: "white",
-          fontSize: "1.8rem",
-          fontWeight: "bold",
-          fontFamily: "Inter, sans-serif",
-          margin: 0,
-        }}
-      >
-        Our Features
-      </h2>
+      <TemplateTitle
+        text={title}
+        accent={accent}
+        max={88}
+        style={{ textAlign: "center" }}
+      />
       <div
         style={{
           position: "relative",
-          width: "600px",
-          height: "300px",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
+          flex: 1,
+          width: "100%",
+          opacity: enter,
         }}
       >
-        {cards.map((label, i) => {
-          const cardAngle = angle + (i * Math.PI * 2) / cards.length;
-          const x = Math.sin(cardAngle) * 220;
-          const z = Math.cos(cardAngle);
-          const normalizedZ = (z + 1) / 2;
-          const cardScale = interpolate(normalizedZ, [0, 1], [0.6, 1]);
-          const cardOpacity = interpolate(normalizedZ, [0, 1], [0.3, 1]);
-
+        {Array.from({ length: count }, (_, i) => {
+          const a = (i * Math.PI * 2) / count - angle;
+          const x = Math.sin(a) * 300;
+          const depth = (Math.cos(a) + 1) / 2;
+          const scale = interpolate(depth, [0, 1], [0.55, 1]);
+          const opacity = interpolate(depth, [0, 1], [0.25, 1]);
+          const color = colorsFor[i % colorsFor.length];
           return (
             <div
               key={i}
@@ -71,40 +81,69 @@ export default function RotatingCarousel() {
                 position: "absolute",
                 left: "50%",
                 top: "50%",
-                transform: `translate(-50%, -50%) translateX(${x}px) scale(${cardScale})`,
-                opacity: cardOpacity,
-                zIndex: Math.round(normalizedZ * 100),
-                width: "180px",
-                height: "220px",
-                borderRadius: "16px",
-                background: "linear-gradient(135deg, #1f2937, #374151)",
-                border: "1px solid rgba(59, 130, 246, 0.3)",
+                width: CARD_W,
+                height: CARD_H,
+                marginLeft: -CARD_W / 2,
+                marginTop: -CARD_H / 2,
+                transform: `translateX(${x}px) scale(${scale})`,
+                opacity,
+                zIndex: Math.round(depth * 100),
+                borderRadius: 36,
+                overflow: "hidden",
+                background: `linear-gradient(160deg, ${colors.surfaceAlt}, ${colors.surface})`,
+                border: `3px solid ${depth > 0.95 ? color : "rgba(255,255,255,0.12)"}`,
+                boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
                 display: "flex",
                 flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                padding: "24px",
               }}
             >
-              <div
-                style={{
-                  width: "48px",
-                  height: "48px",
-                  borderRadius: "12px",
-                  background: "linear-gradient(135deg, #3b82f6, #a855f7)",
-                  marginBottom: "16px",
-                }}
-              />
-              <span
-                style={{
-                  color: "white",
-                  fontSize: "1.1rem",
-                  fontWeight: "600",
-                  fontFamily: "Inter, sans-serif",
-                }}
-              >
-                {label}
-              </span>
+              <div style={{ flex: 1, minHeight: 0 }}>
+                {images?.[i] ? (
+                  <TemplateImage src={images[i]} index={i} />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 140,
+                        height: 140,
+                        borderRadius: 36,
+                        background: `linear-gradient(135deg, ${color}, ${colors.accent2})`,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 72,
+                        fontWeight: 900,
+                        color: colors.bgFrom,
+                      }}
+                    >
+                      {i + 1}
+                    </div>
+                  </div>
+                )}
+              </div>
+              {items[i] ? (
+                <div
+                  style={{
+                    padding: "28px 24px 36px",
+                    textAlign: "center",
+                    color: colors.text,
+                    fontSize: 44,
+                    fontWeight: 800,
+                    lineHeight: 1.15,
+                    wordBreak: "break-word",
+                  }}
+                >
+                  {items[i]}
+                </div>
+              ) : null}
             </div>
           );
         })}

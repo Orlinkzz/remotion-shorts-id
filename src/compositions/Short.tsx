@@ -11,10 +11,7 @@ import { sansFont } from "../fonts";
 import { invalidateVideo, loadVideo } from "../lib/load-video";
 import { SceneView } from "../scenes/SceneView";
 import { theme } from "../theme";
-import {
-  NotebookPaper,
-  notebookPaperSchema,
-} from "./notebook-paper.element";
+import { NotebookPaper, notebookPaperSchema } from "./notebook-paper.element";
 import { useResolvedVideo } from "./useResolvedVideo";
 
 export const shortSchema = z.object({
@@ -47,7 +44,7 @@ export const Short: React.FC<ShortProps> = ({ videoId, bg }) => {
   }
 
   return (
-    <AbsoluteFill>
+    <AbsoluteFill durationInFrames={1163}>
       <NotebookPaper
         {...bg}
         durationInFrames={resolved.durationInFrames}
@@ -60,7 +57,7 @@ export const Short: React.FC<ShortProps> = ({ videoId, bg }) => {
           from={timing.fromFrame}
           durationInFrames={timing.durationInFrames}
         >
-          <SceneView scene={resolved.video.scenes[i]} />
+          <SceneView scene={resolved.video.scenes[i]} videoId={videoId} />
         </Sequence>
       ))}
       <Html5Audio src={resolved.audioSrc} />

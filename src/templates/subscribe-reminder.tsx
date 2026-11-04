@@ -1,104 +1,107 @@
-"use client";
+// Diadaptasi dari "subscribe-reminder" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Pil ajakan follow/subscribe dengan lonceng berdenyut, naik dari bawah area aman.
+// Props: title (ajakan, mis. "Follow"), subtitle (handle akun), text (opsional, kalimat di atas pil), accent.
+import { interpolate, spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  fitFontSize,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Follow",
+  subtitle: "@senimankode",
+  text: "Tips *coding* tiap hari",
+};
 
-export default function SubscribeReminder() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const Bell: React.FC<{ size: number }> = ({ size }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="white">
+    <path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm7-6V11a7 7 0 0 0-5.5-6.84V3.5a1.5 1.5 0 0 0-3 0v.66A7 7 0 0 0 5 11v5l-2 2v1h18v-1l-2-2Z" />
+  </svg>
+);
 
-  const slideIn = spring({
-    frame: Math.max(frame - 10, 0),
+export default function SubscribeReminder(props: TemplateProps) {
+  const { title, subtitle, text, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const slide = spring({
+    frame: frame - 10,
     fps,
     config: { damping: 14, stiffness: 100 },
   });
-
-  const translateY = interpolate(slideIn, [0, 1], [100, 0]);
-
-  const bellPulse = interpolate(
-    Math.sin(frame * 0.15),
-    [-1, 1],
-    [1, 1.15],
-  );
+  const textIn = spring({ frame, fps, config: { damping: 100 } });
+  const bell = interpolate(Math.sin(frame * 0.15), [-1, 1], [1, 1.15]);
+  const ring = Math.sin(frame * 0.6) * 12 * (Math.floor(frame / 45) % 2);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        position: "relative",
-        overflow: "hidden",
+        ...contentArea,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "flex-end",
+        alignItems: "center",
+        gap: 56,
+        fontFamily: sansFont,
       }}
     >
+      {text ? (
+        <div style={{ textAlign: "center", opacity: textIn }}>
+          <TemplateTitle text={text} accent={accent} max={96} />
+        </div>
+      ) : null}
       <div
         style={{
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <span
-          style={{
-            color: "#374151",
-            fontSize: "1.5rem",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Your Video Content
-        </span>
-      </div>
-      <div
-        style={{
-          position: "absolute",
-          bottom: "24px",
-          right: "24px",
           display: "flex",
           alignItems: "center",
-          gap: "0.75rem",
-          backgroundColor: "rgba(0, 0, 0, 0.75)",
-          backdropFilter: "blur(8px)",
-          padding: "0.6rem 1.2rem",
-          borderRadius: "999px",
-          transform: `translateY(${translateY}px)`,
-          border: "1px solid rgba(255, 255, 255, 0.1)",
+          gap: 32,
+          maxWidth: "100%",
+          padding: "28px 56px 28px 28px",
+          borderRadius: 999,
+          background: "rgba(0, 0, 0, 0.75)",
+          border: "2px solid rgba(255,255,255,0.12)",
+          boxShadow: "0 16px 48px rgba(0,0,0,0.4)",
+          opacity: Math.min(1, slide),
+          transform: `translateY(${(1 - slide) * 300}px)`,
         }}
       >
         <div
           style={{
-            width: "28px",
-            height: "28px",
+            flexShrink: 0,
+            width: 120,
+            height: 120,
             borderRadius: "50%",
-            backgroundColor: "#3b82f6",
             display: "flex",
-            justifyContent: "center",
             alignItems: "center",
-            transform: `scale(${bellPulse})`,
+            justifyContent: "center",
+            background: accent,
+            transform: `scale(${bell}) rotate(${ring}deg)`,
           }}
         >
-          <span style={{ color: "white", fontSize: "0.8rem" }}>&#128276;</span>
+          <Bell size={64} />
         </div>
-        <div style={{ display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
           <span
             style={{
-              color: "white",
-              fontSize: "0.85rem",
-              fontWeight: 600,
-              fontFamily: "Inter, sans-serif",
+              fontSize: fitFontSize(title, 64, 44, 12),
+              fontWeight: 800,
+              color: colors.text,
             }}
           >
-            Subscribe
+            {title}
           </span>
-          <span
-            style={{
-              color: "#9ca3af",
-              fontSize: "0.65rem",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            @CreativeStudio
-          </span>
+          {subtitle ? (
+            <span
+              style={{ fontSize: 42, fontWeight: 500, color: colors.muted }}
+            >
+              {subtitle}
+            </span>
+          ) : null}
         </div>
       </div>
     </div>

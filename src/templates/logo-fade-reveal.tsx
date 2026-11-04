@@ -1,112 +1,130 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "logo-fade-reveal" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Logo memudar masuk sambil membesar halus, disusul nama brand dan tagline.
+// Props: title (nama brand), subtitle (tagline), images[0] (opsional, gambar logo), accent.
+import { spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Senimankode",
+  subtitle: "Belajar coding, satu menit sehari",
+};
 
-import { useCurrentFrame, spring, useVideoConfig } from "remotion";
+const initials = (name: string) =>
+  plain(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("") || "?";
 
-export default function LogoFadeReveal() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const LogoMark: React.FC<{
+  title: string;
+  image?: string;
+  accent: string;
+  size?: number;
+}> = ({ title, image, accent, size = 320 }) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size * 0.22,
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: image
+        ? "transparent"
+        : `linear-gradient(135deg, ${accent}, ${colors.accent2})`,
+      boxShadow: image ? undefined : `0 20px 60px ${accent}55`,
+    }}
+  >
+    {image ? (
+      <TemplateImage src={image} style={{ objectFit: "contain" }} />
+    ) : (
+      <span
+        style={{
+          fontSize: size * 0.42,
+          fontWeight: 900,
+          color: "white",
+          letterSpacing: -4,
+        }}
+      >
+        {initials(title)}
+      </span>
+    )}
+  </div>
+);
 
-  // Logo fade + scale using spring
-  const logoProgress = spring({
+export default function LogoFadeReveal(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
+  const logo = spring({
     frame,
     fps,
     config: { damping: 12, stiffness: 80, mass: 0.8 },
   });
-
-  const logoOpacity = logoProgress;
-  const logoScale = 0.8 + 0.2 * logoProgress;
-
-  // Company name fades in with delay
-  const textProgress = spring({
+  const text = spring({
     frame: Math.max(0, frame - 15),
     fps,
     config: { damping: 14, stiffness: 60, mass: 0.6 },
   });
-
-  const textOpacity = textProgress;
-  const textTranslateY = 20 * (1 - textProgress);
+  const tag = spring({
+    frame: Math.max(0, frame - 24),
+    fps,
+    config: { damping: 14, stiffness: 60, mass: 0.6 },
+  });
 
   return (
     <div
       style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
-      {/* Logo */}
+      <div style={{ opacity: logo, transform: `scale(${0.8 + 0.2 * logo})` }}>
+        <LogoMark title={title} image={images?.[0]} accent={accent} />
+      </div>
       <div
         style={{
-          width: "120px",
-          height: "120px",
-          borderRadius: "24px",
-          background: "linear-gradient(135deg, #4361ee, #7209b7)",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: logoOpacity,
-          transform: `scale(${logoScale})`,
-          boxShadow: "0 0 40px rgba(67, 97, 238, 0.3)",
+          marginTop: 56,
+          fontSize: fitFontSize(plain(title), 120, 64, 11),
+          fontWeight: 900,
+          color: colors.text,
+          letterSpacing: -2,
+          opacity: text,
+          transform: `translateY(${20 * (1 - text)}px)`,
         }}
       >
-        <span
-          style={{
-            color: "white",
-            fontSize: "1.8rem",
-            fontWeight: "800",
-            letterSpacing: "0.1em",
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          LOGO
-        </span>
+        {plain(title)}
       </div>
-
-      {/* Company Name */}
-      <h2
+      <div
         style={{
-          color: "white",
-          fontSize: "2rem",
-          fontWeight: "700",
-          marginTop: "1.5rem",
-          marginBottom: 0,
-          fontFamily: "Inter, sans-serif",
-          letterSpacing: "0.05em",
-          opacity: textOpacity,
-          transform: `translateY(${textTranslateY}px)`,
+          marginTop: 20,
+          fontSize: 46,
+          fontWeight: 600,
+          color: colors.muted,
+          opacity: tag,
+          transform: `translateY(${20 * (1 - tag)}px)`,
         }}
       >
-        Company Name
-      </h2>
-      <p
-        style={{
-          color: "#93c5fd",
-          fontSize: "1rem",
-          marginTop: "0.5rem",
-          fontFamily: "Inter, sans-serif",
-          opacity: textOpacity,
-          transform: `translateY(${textTranslateY}px)`,
-        }}
-      >
-        Your tagline here
-      </p>
+        {subtitle}
+      </div>
     </div>
   );
 }

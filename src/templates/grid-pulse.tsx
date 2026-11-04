@@ -1,72 +1,59 @@
-"use client";
+// Diadaptasi dari "grid-pulse" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Grid titik dengan gelombang denyut yang menyebar dari tengah, di belakang judul.
+// Props: title, subtitle, accent.
+import {
+  TitleCard,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  title: "Sinyal *menyebar*",
+  subtitle: "Satu perubahan, efeknya ke mana-mana",
+};
 
-export default function GridPulse() {
-  const frame = useCurrentFrame();
-  const { width, height, fps } = useVideoConfig();
+const COLS = 9;
+const ROWS = 16;
+const DOT = 18;
 
-  const cols = 12;
-  const rows = 8;
-  const dotSize = 10;
-
-  const spacingX = width / (cols + 1);
-  const spacingY = height / (rows + 1);
-
-  // Center of the grid
-  const centerCol = (cols - 1) / 2;
-  const centerRow = (rows - 1) / 2;
-
-  const t = frame / fps;
-
-  const dots = [];
-  for (let row = 0; row < rows; row++) {
-    for (let col = 0; col < cols; col++) {
-      const x = spacingX * (col + 1);
-      const y = spacingY * (row + 1);
-
-      // Distance from center in grid units
-      const dx = col - centerCol;
-      const dy = row - centerRow;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-
-      // Wave: pulse travels outward from center
-      const wave = Math.sin(t * 3 - distance * 0.8);
-      const normalizedWave = wave * 0.5 + 0.5; // 0 to 1
-
-      const opacity = 0.15 + normalizedWave * 0.85;
-      const scale = 0.4 + normalizedWave * 0.6;
-
-      dots.push({ x, y, opacity, scale, key: row * cols + col });
-    }
-  }
+export default function GridPulse(props: TemplateProps) {
+  const { title, subtitle, accent, frame, durationInFrames, width, height } =
+    useTemplate(props, defaults);
+  // Jumlah denyut bulat per scene supaya ujung dan awal menyambung.
+  const pulses = Math.max(1, Math.round(durationInFrames / 45));
+  const t = (frame / durationInFrames) * Math.PI * 2 * pulses;
+  const spacingX = width / (COLS + 1);
+  const spacingY = height / (ROWS + 1);
+  const cx = (COLS - 1) / 2;
+  const cy = (ROWS - 1) / 2;
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {dots.map((dot) => (
-        <div
-          key={dot.key}
-          style={{
-            position: "absolute",
-            left: dot.x,
-            top: dot.y,
-            width: dotSize,
-            height: dotSize,
-            borderRadius: "50%",
-            backgroundColor: "#3b82f6",
-            opacity: dot.opacity,
-            transform: `translate(-50%, -50%) scale(${dot.scale})`,
-          }}
-        />
-      ))}
-    </div>
+    <>
+      <div style={{ position: "absolute", inset: 0, overflow: "hidden" }}>
+        {Array.from({ length: ROWS * COLS }).map((_, k) => {
+          const row = Math.floor(k / COLS);
+          const col = k % COLS;
+          const distance = Math.hypot(col - cx, (row - cy) * 0.75);
+          const wave = Math.sin(t - distance * 0.8) * 0.5 + 0.5;
+          return (
+            <div
+              key={k}
+              style={{
+                position: "absolute",
+                left: spacingX * (col + 1),
+                top: spacingY * (row + 1),
+                width: DOT,
+                height: DOT,
+                borderRadius: "50%",
+                backgroundColor: accent,
+                opacity: 0.08 + wave * 0.5,
+                transform: `translate(-50%, -50%) scale(${0.4 + wave * 0.8})`,
+              }}
+            />
+          );
+        })}
+      </div>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+    </>
   );
 }

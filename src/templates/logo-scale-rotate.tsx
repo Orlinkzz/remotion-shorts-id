@@ -1,88 +1,132 @@
-"use client";
+// Diadaptasi dari "logo-scale-rotate" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Logo membesar dari nol sambil berputar satu kali, lalu berdenyut dengan glow; nama brand naik.
+// Props: title (nama brand), subtitle (tagline), images[0] (opsional, gambar logo), accent.
+import { interpolate, spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  fitFontSize,
+  plain,
+  sansFont,
+  TemplateImage,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, spring, interpolate } from "remotion";
+const defaults = {
+  title: "Senimankode",
+  subtitle: "Belajar coding, satu menit sehari",
+};
 
-export default function LogoScaleRotate() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+const initials = (name: string) =>
+  plain(name)
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0].toUpperCase())
+    .join("") || "?";
 
-  // Scale and rotate entrance with spring
+const LogoMark: React.FC<{
+  title: string;
+  image?: string;
+  accent: string;
+  glow: number;
+  size?: number;
+}> = ({ title, image, accent, glow, size = 320 }) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      borderRadius: size * 0.22,
+      overflow: "hidden",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      background: image
+        ? "transparent"
+        : `linear-gradient(135deg, ${accent}, ${colors.accent2})`,
+      boxShadow: image ? undefined : `0 0 ${glow}px ${accent}cc`,
+    }}
+  >
+    {image ? (
+      <TemplateImage src={image} style={{ objectFit: "contain" }} />
+    ) : (
+      <span
+        style={{
+          fontSize: size * 0.42,
+          fontWeight: 900,
+          color: "white",
+          letterSpacing: -4,
+        }}
+      >
+        {initials(title)}
+      </span>
+    )}
+  </div>
+);
+
+export default function LogoScaleRotate(props: TemplateProps) {
+  const { title, subtitle, images, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
   const entrance = spring({
     frame,
     fps,
     config: { damping: 10, stiffness: 100, mass: 0.8 },
   });
-
-  const scale = interpolate(entrance, [0, 1], [0, 1]);
   const rotation = interpolate(entrance, [0, 1], [0, 360]);
-
-  // Subtle glow pulse after settling
-  const glowIntensity = frame > 20 ? 8 + Math.sin(frame * 0.15) * 4 : 0;
-
-  // Company name slides up
-  const nameProgress = spring({
+  const glow = frame > 20 ? 40 + Math.sin(frame * 0.15) * 20 : 0;
+  const name = spring({
     frame: Math.max(0, frame - 20),
     fps,
     config: { damping: 12, stiffness: 100 },
   });
-  const nameOpacity = interpolate(nameProgress, [0, 1], [0, 1]);
-  const nameTranslateY = interpolate(nameProgress, [0, 1], [30, 0]);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
-        justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        justifyContent: "center",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
+      <div style={{ transform: `scale(${entrance}) rotate(${rotation}deg)` }}>
+        <LogoMark
+          title={title}
+          image={images?.[0]}
+          accent={accent}
+          glow={glow}
+        />
+      </div>
       <div
         style={{
-          transform: `scale(${scale}) rotate(${rotation}deg)`,
+          marginTop: 64,
+          fontSize: fitFontSize(plain(title), 120, 64, 11),
+          fontWeight: 900,
+          color: colors.text,
+          letterSpacing: -2,
+          opacity: name,
+          transform: `translateY(${30 * (1 - name)}px)`,
         }}
       >
-        <div
-          style={{
-            width: "100px",
-            height: "100px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #4361ee, #7209b7)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            boxShadow: `0 0 ${glowIntensity}px ${glowIntensity / 2}px rgba(67, 97, 238, 0.6)`,
-          }}
-        >
-          <span
-            style={{
-              color: "white",
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              fontFamily: "Inter, sans-serif",
-            }}
-          >
-            LOGO
-          </span>
-        </div>
+        {plain(title)}
       </div>
-      <p
+      <div
         style={{
-          color: "white",
-          fontSize: "1.8rem",
-          fontWeight: "bold",
-          fontFamily: "Inter, sans-serif",
-          marginTop: "1.5rem",
-          opacity: nameOpacity,
-          transform: `translateY(${nameTranslateY}px)`,
+          marginTop: 20,
+          fontSize: 46,
+          fontWeight: 600,
+          color: colors.muted,
+          opacity: name,
         }}
       >
-        Company Name
-      </p>
+        {subtitle}
+      </div>
     </div>
   );
 }

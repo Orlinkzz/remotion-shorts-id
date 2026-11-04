@@ -1,126 +1,104 @@
-"use client";
+// Diadaptasi dari "chapter-title" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Pembatas bab: label "BAGIAN", nomor besar, garis ornamen, lalu judul bab.
+// Props: value (nomor bab, opsional), title (judul bab), subtitle (label di atas nomor, default "Bagian"), accent.
+import { interpolate, spring } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  formatNumber,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, interpolate, spring, useVideoConfig } from "remotion";
+const defaults = {
+  value: 1,
+  title: "Dasar *Async/Await*",
+  subtitle: "Bagian",
+};
 
-export default function ChapterTitle() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
+export default function ChapterTitle(props: TemplateProps) {
+  const { value, title, subtitle, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
+  );
   const numberScale = spring({
     frame,
     fps,
+    from: 0.5,
+    to: 1,
     config: { damping: 12, stiffness: 80 },
   });
-
-  const subtitleOpacity = interpolate(frame, [20, 40], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const subtitleY = interpolate(frame, [20, 40], [20, 0], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const lineWidth = interpolate(frame, [10, 40], [0, 120], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
-
-  const labelOpacity = interpolate(frame, [5, 20], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+  const labelIn = interpolate(frame, [5, 20], [0, 1], clamp);
+  const line = interpolate(frame, [10, 40], [0, 1], clamp);
+  const titleIn = interpolate(frame, [20, 40], [0, 1], clamp);
 
   return (
     <div
       style={{
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
+        ...contentArea,
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        overflow: "hidden",
+        textAlign: "center",
+        fontFamily: sansFont,
       }}
     >
-      <p
+      <div
         style={{
-          color: "#9ca3af",
-          fontSize: "1rem",
-          fontWeight: 500,
-          letterSpacing: "0.2em",
+          fontSize: 44,
+          fontWeight: 600,
+          letterSpacing: "0.25em",
           textTransform: "uppercase",
-          margin: 0,
-          marginBottom: "0.5rem",
-          opacity: labelOpacity,
-          fontFamily: "Inter, sans-serif",
+          color: colors.muted,
+          opacity: labelIn,
         }}
       >
-        Chapter
-      </p>
-      <h1
+        {subtitle}
+      </div>
+      <div
         style={{
-          color: "white",
-          fontSize: "8rem",
-          fontWeight: 800,
-          margin: 0,
+          fontSize: 300,
+          fontWeight: 900,
           lineHeight: 1,
+          color: colors.text,
           transform: `scale(${numberScale})`,
-          fontFamily: "Inter, sans-serif",
+          opacity: Math.min(1, numberScale),
         }}
       >
-        1
-      </h1>
+        {formatNumber(value)}
+      </div>
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          gap: "1rem",
-          marginTop: "1.5rem",
-          marginBottom: "1rem",
+          gap: 20,
+          margin: "40px 0",
         }}
       >
+        <div style={{ height: 3, width: 220 * line, background: accent }} />
         <div
           style={{
-            height: "1px",
-            width: `${lineWidth}px`,
-            backgroundColor: "#3b82f6",
-          }}
-        />
-        <div
-          style={{
-            width: "6px",
-            height: "6px",
+            width: 14,
+            height: 14,
             borderRadius: "50%",
-            backgroundColor: "#3b82f6",
-            opacity: labelOpacity,
+            background: accent,
+            opacity: labelIn,
           }}
         />
-        <div
-          style={{
-            height: "1px",
-            width: `${lineWidth}px`,
-            backgroundColor: "#3b82f6",
-          }}
-        />
+        <div style={{ height: 3, width: 220 * line, background: accent }} />
       </div>
-      <p
+      <div
         style={{
-          color: "#d1d5db",
-          fontSize: "1.5rem",
-          fontWeight: 300,
-          margin: 0,
-          letterSpacing: "0.1em",
-          opacity: subtitleOpacity,
-          transform: `translateY(${subtitleY}px)`,
-          fontFamily: "Inter, sans-serif",
+          opacity: titleIn,
+          transform: `translateY(${(1 - titleIn) * 24}px)`,
         }}
       >
-        The Beginning
-      </p>
+        <TemplateTitle text={title} accent={accent} max={96} />
+      </div>
     </div>
   );
 }

@@ -1,63 +1,64 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "slide-text" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Judul meluncur masuk dari kanan, subjudul menyusul dari kiri.
+// Props: title (judul, *kata* = aksen), subtitle (opsional), accent.
+import { spring } from "remotion";
+import {
+  colors,
+  contentArea,
+  sansFont,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Belajar *TypeScript*",
+  subtitle: "Dalam 60 detik",
+};
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
-
-export default function SlideText() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const opacity = spring({
-    frame,
+export default function SlideText(props: TemplateProps) {
+  const { title, subtitle, accent, frame, fps } = useTemplate(props, defaults);
+  const slide = spring({ frame, fps, config: { damping: 12, mass: 0.5 } });
+  const subSlide = spring({
+    frame: frame - 10,
     fps,
-    from: 0,
-    to: 1,
-    durationInFrames: 30,
-  });
-
-  const slideX = spring({
-    frame,
-    fps,
-    from: 200,
-    to: 0,
-    durationInFrames: 30,
-    config: {
-      damping: 12,
-      mass: 0.5,
-    },
+    config: { damping: 12, mass: 0.5 },
   });
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: `translate(-50%, -50%) translateX(${slideX}px)`,
-        width: "100%",
+        ...contentArea,
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
         textAlign: "center",
+        gap: 32,
+        fontFamily: sansFont,
       }}
     >
-      <h1
+      <div
         style={{
-          opacity,
-          color: "white",
-          fontSize: "4rem",
-          fontWeight: "bold",
+          opacity: Math.min(1, slide),
+          transform: `translateX(${(1 - slide) * 300}px)`,
         }}
       >
-        Sliding Text!
-      </h1>
+        <TemplateTitle text={title} accent={accent} max={130} />
+      </div>
+      {subtitle ? (
+        <div
+          style={{
+            fontSize: 52,
+            fontWeight: 600,
+            color: colors.muted,
+            opacity: Math.min(1, subSlide),
+            transform: `translateX(${(1 - subSlide) * -300}px)`,
+          }}
+        >
+          {subtitle}
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 // File ini dibuat otomatis oleh scripts/gen-template-registry.mjs
 import type { ComponentType } from "react";
+import type { TemplateProps } from "../lib/template-kit";
 import AnimatedList from "./animated-list";
 import AnimatedText from "./animated-text";
 import AreaChart from "./area-chart";
@@ -83,7 +84,7 @@ import ZoomPulse from "./zoom-pulse";
 import ZoomThrough from "./zoom-through";
 import type { TemplateName } from "./names";
 
-export const templateRegistry: Record<TemplateName, ComponentType> = {
+export const templateRegistry: Record<TemplateName, ComponentType<TemplateProps>> = {
   "animated-list": AnimatedList,
   "animated-text": AnimatedText,
   "area-chart": AreaChart,

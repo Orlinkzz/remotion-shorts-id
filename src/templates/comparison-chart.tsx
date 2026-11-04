@@ -1,212 +1,130 @@
-/**
- * Free Remotion Template Component
- * ---------------------------------
- * This template is free to use in your projects!
- * Credit appreciated but not required.
- *
- * Created by the team at https://www.reactvideoeditor.com
- *
- * Happy coding and building amazing videos! 🎉
- */
+// Diadaptasi dari "comparison-chart" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Dua batang berdampingan untuk membandingkan sebelum vs sesudah.
+// Props: title, items[0..1] (label kiri/kanan), values[0..1] (nilai), unit, accent (warna batang kanan).
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  contentArea,
+  formatNumber,
+  sansFont,
+  series,
+  TemplateTitle,
+  useTemplate,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-"use client";
+const defaults = {
+  title: "Query *sebelum* vs *sesudah* index",
+  items: ["Tanpa index", "Pakai index"],
+  values: [840, 12],
+  unit: "ms",
+};
 
-import { interpolate, useCurrentFrame } from "remotion";
+const BAR_MAX = 640;
 
-export default function ComparisonChart() {
-  const frame = useCurrentFrame();
-
-  const maxBarHeight = 280;
-
-  // Before value animation
-  const beforeValue = Math.round(
-    interpolate(frame, [10, 40], [0, 34], {
-      extrapolateRight: "clamp",
-      extrapolateLeft: "clamp",
-    })
+export default function ComparisonChart(props: TemplateProps) {
+  const { title, items, values, unit, accent, frame, fps } = useTemplate(
+    props,
+    defaults,
   );
-
-  const beforeBarHeight = interpolate(frame, [10, 40], [0, (34 / 100) * maxBarHeight], {
-    extrapolateRight: "clamp",
-    extrapolateLeft: "clamp",
-  });
-
-  // After value animation (starts slightly later)
-  const afterValue = Math.round(
-    interpolate(frame, [20, 50], [0, 89], {
-      extrapolateRight: "clamp",
-      extrapolateLeft: "clamp",
-    })
-  );
-
-  const afterBarHeight = interpolate(frame, [20, 50], [0, (89 / 100) * maxBarHeight], {
-    extrapolateRight: "clamp",
-    extrapolateLeft: "clamp",
-  });
-
-  // Divider line animation
-  const dividerOpacity = interpolate(frame, [0, 15], [0, 1], {
-    extrapolateRight: "clamp",
-  });
-
-  const dividerHeight = interpolate(frame, [0, 20], [0, 350], {
-    extrapolateRight: "clamp",
-  });
+  const data = series(items, values).slice(0, 2);
+  const max = Math.max(1, ...data.map((d) => d.value));
+  const barColors = data.length > 1 ? ["#FB7185", accent] : [accent];
+  const titleIn = interpolate(frame, [0, fps * 0.5], [0, 1], clamp);
+  const divider = interpolate(frame, [0, fps * 0.7], [0, 1], clamp);
 
   return (
     <div
       style={{
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        width: "100%",
-        height: "100%",
+        ...contentArea,
         display: "flex",
-        alignItems: "center",
+        flexDirection: "column",
         justifyContent: "center",
-        fontFamily: "Inter, system-ui, sans-serif",
-        background: "linear-gradient(to bottom right, #111827, #1f2937)",
+        gap: 56,
+        fontFamily: sansFont,
       }}
     >
+      <div style={{ opacity: titleIn, textAlign: "center" }}>
+        <TemplateTitle text={title} accent={accent} max={84} />
+      </div>
       <div
         style={{
-          position: "relative",
-          width: "700px",
-          height: "480px",
-          backgroundColor: "rgba(0, 0, 0, 0.2)",
-          borderRadius: "16px",
-          boxShadow: "0 10px 30px rgba(0, 0, 0, 0.3)",
-          padding: "40px",
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "center",
+          padding: "56px 40px 44px",
+          borderRadius: 36,
+          background: "rgba(17, 24, 39, 0.68)",
+          border: `2px solid ${colors.surfaceAlt}`,
+          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.35)",
         }}
       >
-        {/* Title */}
-        <div
-          style={{
-            fontSize: "28px",
-            fontWeight: "bold",
-            color: "white",
-            textShadow: "0 2px 4px rgba(0,0,0,0.3)",
-            letterSpacing: "-0.5px",
-            textAlign: "center",
-            marginBottom: "30px",
-          }}
-        >
-          Performance Comparison
-        </div>
-
-        {/* Comparison container */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "center",
-            height: `${maxBarHeight + 80}px`,
-            position: "relative",
-          }}
-        >
-          {/* Before side */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
-            {/* Value */}
+        {data.map((d, i) => {
+          const p = interpolate(
+            frame,
+            [fps * 0.3 + i * fps * 0.35, fps * 1.3 + i * fps * 0.35],
+            [0, 1],
+            { ...clamp, easing: (t) => 1 - (1 - t) ** 3 },
+          );
+          const color = barColors[i];
+          return [
+            i > 0 ? (
+              <div
+                key="divider"
+                style={{
+                  width: 3,
+                  height: (BAR_MAX + 120) * divider,
+                  margin: "0 36px",
+                  alignSelf: "center",
+                  background: "rgba(255,255,255,0.2)",
+                }}
+              />
+            ) : null,
             <div
+              key={i}
               style={{
-                fontSize: "48px",
-                fontWeight: "bold",
-                color: "#ef4444",
-                marginBottom: "15px",
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
               }}
             >
-              {beforeValue}%
-            </div>
-
-            {/* Bar */}
-            <div
-              style={{
-                width: "120px",
-                height: `${beforeBarHeight}px`,
-                backgroundColor: "#ef4444",
-                borderRadius: "8px 8px 0 0",
-                boxShadow: "0 0 20px rgba(239, 68, 68, 0.3)",
-              }}
-            />
-
-            {/* Label */}
-            <div
-              style={{
-                fontSize: "20px",
-                fontWeight: "600",
-                color: "rgba(255,255,255,0.8)",
-                marginTop: "15px",
-              }}
-            >
-              Before
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div
-            style={{
-              width: "2px",
-              height: `${dividerHeight}px`,
-              backgroundColor: "rgba(255,255,255,0.2)",
-              opacity: dividerOpacity,
-              alignSelf: "center",
-              margin: "0 30px",
-            }}
-          />
-
-          {/* After side */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              flex: 1,
-            }}
-          >
-            {/* Value */}
-            <div
-              style={{
-                fontSize: "48px",
-                fontWeight: "bold",
-                color: "#4361ee",
-                marginBottom: "15px",
-              }}
-            >
-              {afterValue}%
-            </div>
-
-            {/* Bar */}
-            <div
-              style={{
-                width: "120px",
-                height: `${afterBarHeight}px`,
-                backgroundColor: "#4361ee",
-                borderRadius: "8px 8px 0 0",
-                boxShadow: "0 0 20px rgba(67, 97, 238, 0.3)",
-              }}
-            />
-
-            {/* Label */}
-            <div
-              style={{
-                fontSize: "20px",
-                fontWeight: "600",
-                color: "rgba(255,255,255,0.8)",
-                marginTop: "15px",
-              }}
-            >
-              After
-            </div>
-          </div>
-        </div>
+              <div
+                style={{
+                  fontSize: 76,
+                  fontWeight: 900,
+                  color,
+                  marginBottom: 20,
+                  fontVariantNumeric: "tabular-nums",
+                }}
+              >
+                {formatNumber(d.value * p, Number.isInteger(d.value) ? 0 : 1) +
+                  unit}
+              </div>
+              <div
+                style={{
+                  width: 200,
+                  height: Math.max(8, (d.value / max) * BAR_MAX * p),
+                  borderRadius: "20px 20px 0 0",
+                  background: color,
+                  boxShadow: `0 0 40px ${color}55`,
+                }}
+              />
+              <div
+                style={{
+                  marginTop: 24,
+                  fontSize: 44,
+                  fontWeight: 700,
+                  color: colors.text,
+                  textAlign: "center",
+                }}
+              >
+                {d.label}
+              </div>
+            </div>,
+          ];
+        })}
       </div>
     </div>
   );

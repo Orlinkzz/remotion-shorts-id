@@ -1,115 +1,49 @@
-"use client";
+// Diadaptasi dari "morph-transition" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B: A mengecil dan memudar, B masuk dari skala besar.
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import { interpolate } from "remotion";
+import {
+  clamp,
+  colors,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { useCurrentFrame, useVideoConfig, interpolate } from "remotion";
+const defaults = {
+  items: ["Class component"],
+  title: "Jadi *function component*",
+  subtitle: "Lebih ringkas dengan hooks",
+};
 
-export default function MorphTransition() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const totalFrames = fps * 2.5;
-
-  // Scene A: scale 1→0.5, opacity 1→0
-  const scaleA = interpolate(frame, [0, totalFrames], [1, 0.5], {
-    extrapolateRight: "clamp",
-  });
-  const opacityA = interpolate(frame, [0, totalFrames * 0.6], [1, 0], {
-    extrapolateRight: "clamp",
-  });
-
-  // Scene B: scale 1.5→1, opacity 0→1
-  const scaleB = interpolate(frame, [0, totalFrames], [1.5, 1], {
-    extrapolateRight: "clamp",
-  });
-  const opacityB = interpolate(frame, [totalFrames * 0.4, totalFrames], [0, 1], {
-    extrapolateLeft: "clamp",
-    extrapolateRight: "clamp",
-  });
+export default function MorphTransition(props: TemplateProps) {
+  const { items, title, subtitle, accent } = useTemplate(props, defaults);
+  const p = useTransitionProgress();
+  const opacityA = interpolate(p, [0, 0.6], [1, 0], clamp);
+  const opacityB = interpolate(p, [0.4, 1], [0, 1], clamp);
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-      }}
-    >
-      {/* Scene A */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: opacityA,
-          transform: `scale(${scaleA})`,
-        }}
-      >
-        <div
+    <>
+      <TitleCard
+        title={title}
+        subtitle={subtitle}
+        accent={accent}
+        style={{ opacity: opacityB, transform: `scale(${1.5 - 0.5 * p})` }}
+      />
+      {opacityA > 0 ? (
+        <TitleCard
+          title={items[0]}
+          accent={accent}
+          background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
           style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            marginBottom: "1rem",
+            opacity: opacityA,
+            transform: `scale(${1 - 0.5 * p})`,
+            borderRadius: p * 120,
+            overflow: "hidden",
           }}
         />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Scene A
-        </h2>
-        <p style={{ color: "#93c5fd", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Morphing away...
-        </p>
-      </div>
-
-      {/* Scene B */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          opacity: opacityB,
-          transform: `scale(${scaleB})`,
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #a855f7, #7209b7)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-            fontFamily: "Inter, sans-serif",
-          }}
-        >
-          Scene B
-        </h2>
-        <p style={{ color: "#c084fc", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Morphing in...
-        </p>
-      </div>
-    </div>
+      ) : null}
+    </>
   );
 }

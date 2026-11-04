@@ -1,108 +1,52 @@
-"use client";
+// Diadaptasi dari "slide-wipe" (RVE Remotion Templates, MIT, https://www.reactvideoeditor.com).
+// Transisi layar A -> B dengan sapuan garis beraksen dari kiri ke kanan.
+// Props: items[0] = teks layar A, title + subtitle = layar B, accent.
+import {
+  colors,
+  TitleCard,
+  useTemplate,
+  useTransitionProgress,
+  type TemplateProps,
+} from "../lib/template-kit";
 
-import { spring, useCurrentFrame, useVideoConfig } from "remotion";
+const defaults = {
+  items: ["Tanpa index"],
+  title: "Dengan *index*",
+  subtitle: "Query 40x lebih cepat",
+};
 
-export default function SlideWipe() {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-
-  const slideProgress = spring({
-    frame: frame - 15,
-    fps,
-    config: {
-      damping: 200,
-      stiffness: 100,
-      mass: 0.5,
-    },
-  });
-
-  // The old scene panel slides from 0% to 100% (off-screen right)
-  const translateX = slideProgress * 100;
+export default function SlideWipe(props: TemplateProps) {
+  const { items, title, subtitle, accent } = useTemplate(props, defaults);
+  const p = useTransitionProgress();
+  const edge = p * 100;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: "100%",
-        height: "100%",
-        backgroundColor: "#111827",
-        overflow: "hidden",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-      }}
-    >
-      {/* Scene A (underneath) - New Scene with purple theme */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "12px",
-            background: "linear-gradient(135deg, #a855f7, #7c3aed)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-          }}
-        >
-          New Scene
-        </h2>
-        <p style={{ color: "#c084fc", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Revealed underneath
-        </p>
-      </div>
-
-      {/* Scene B (sliding away) - Old Scene with blue theme */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          transform: `translateX(${translateX}%)`,
-          backgroundColor: "#111827",
-        }}
-      >
-        <div
-          style={{
-            width: "80px",
-            height: "80px",
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #3b82f6, #1d4ed8)",
-            marginBottom: "1rem",
-          }}
-        />
-        <h2
-          style={{
-            color: "white",
-            fontSize: "2.5rem",
-            fontWeight: "bold",
-            margin: 0,
-          }}
-        >
-          Old Scene
-        </h2>
-        <p style={{ color: "#93c5fd", fontSize: "1.1rem", marginTop: "0.5rem" }}>
-          Sliding away...
-        </p>
-      </div>
-    </div>
+    <>
+      <TitleCard title={title} subtitle={subtitle} accent={accent} />
+      {p < 1 ? (
+        <>
+          <TitleCard
+            title={items[0]}
+            accent={accent}
+            background={`linear-gradient(160deg, ${colors.bgFrom}, ${colors.bgTo})`}
+            style={{ clipPath: `inset(0 0 0 ${edge}%)` }}
+          />
+          {p > 0 ? (
+            <div
+              style={{
+                position: "absolute",
+                top: 0,
+                bottom: 0,
+                left: `${edge}%`,
+                width: 16,
+                transform: "translateX(-50%)",
+                background: accent,
+                boxShadow: `0 0 40px ${accent}`,
+              }}
+            />
+          ) : null}
+        </>
+      ) : null}
+    </>
   );
 }
